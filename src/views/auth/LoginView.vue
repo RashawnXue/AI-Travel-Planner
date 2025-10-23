@@ -178,21 +178,21 @@ h1 {
 }
 
 /* 普通输入框样式 */
-:deep(.ant-input) {
+:deep(.ant-input:not(.ant-input-affix-wrapper .ant-input)) {
   height: 46px;
   border-radius: 8px;
   font-size: 15px;
   padding: 0 16px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #d9d9d9 !important;
 }
 
-:deep(.ant-input:hover) {
-  border-color: #667eea;
+:deep(.ant-input:not(.ant-input-affix-wrapper .ant-input):hover) {
+  border-color: #667eea !important;
 }
 
-:deep(.ant-input:focus) {
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+:deep(.ant-input:not(.ant-input-affix-wrapper .ant-input):focus) {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
 }
 
 /* 密码输入框容器样式 */
@@ -200,28 +200,28 @@ h1 {
   height: 46px;
   border-radius: 8px;
   padding: 0 11px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #d9d9d9 !important;
 }
 
 :deep(.ant-input-affix-wrapper:hover) {
-  border-color: #667eea;
+  border-color: #667eea !important;
 }
 
 :deep(.ant-input-affix-wrapper-focused) {
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
 }
 
 /* 密码输入框内部 input，移除边框避免双层 */
 :deep(.ant-input-affix-wrapper .ant-input) {
-  border: none;
-  padding: 0;
-  box-shadow: none;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
 :deep(.ant-input-affix-wrapper .ant-input:focus) {
-  border: none;
-  box-shadow: none;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .submit-btn {
