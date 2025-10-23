@@ -237,8 +237,8 @@ h1 {
   font-weight: 500;
 }
 
-:deep(.ant-input),
-:deep(.ant-input-affix-wrapper) {
+/* 普通输入框样式 */
+:deep(.ant-input) {
   height: 46px;
   border-radius: 8px;
   font-size: 15px;
@@ -246,16 +246,42 @@ h1 {
   border: 1px solid #d9d9d9;
 }
 
-:deep(.ant-input:hover),
+:deep(.ant-input:hover) {
+  border-color: #667eea;
+}
+
+:deep(.ant-input:focus) {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+/* 密码输入框容器样式 */
+:deep(.ant-input-affix-wrapper) {
+  height: 46px;
+  border-radius: 8px;
+  padding: 0 11px;
+  border: 1px solid #d9d9d9;
+}
+
 :deep(.ant-input-affix-wrapper:hover) {
   border-color: #667eea;
 }
 
-:deep(.ant-input:focus),
-:deep(.ant-input-affix-wrapper:focus),
 :deep(.ant-input-affix-wrapper-focused) {
   border-color: #667eea;
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+/* 密码输入框内部 input，移除边框避免双层 */
+:deep(.ant-input-affix-wrapper .ant-input) {
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+:deep(.ant-input-affix-wrapper .ant-input:focus) {
+  border: none;
+  box-shadow: none;
 }
 
 .submit-btn {
