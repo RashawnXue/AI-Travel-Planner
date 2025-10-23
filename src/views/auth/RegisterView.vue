@@ -23,7 +23,6 @@
             v-model:value="formState.username"
             placeholder="请输入用户名"
             size="large"
-            @blur="handleUsernameBlur"
           />
         </a-form-item>
 
@@ -41,7 +40,6 @@
             type="email"
             placeholder="请输入邮箱地址"
             size="large"
-            @blur="handleEmailBlur"
           />
         </a-form-item>
 
@@ -58,7 +56,6 @@
             v-model:value="formState.password"
             placeholder="请输入密码"
             size="large"
-            @blur="handlePasswordBlur"
           />
         </a-form-item>
 
@@ -160,27 +157,7 @@ const validateConfirmPasswordRule = async (_rule: Rule, value: string) => {
   return Promise.resolve()
 }
 
-// 字段失焦验证
-const handleUsernameBlur = () => {
-  const result = validateUsername(formState.username)
-  if (!result.valid && formState.username) {
-    message.warning(result.message)
-  }
-}
-
-const handleEmailBlur = () => {
-  const result = validateEmail(formState.email)
-  if (!result.valid && formState.email) {
-    message.warning(result.message)
-  }
-}
-
-const handlePasswordBlur = () => {
-  const result = validatePassword(formState.password)
-  if (!result.valid && formState.password) {
-    message.warning(result.message)
-  }
-}
+// 字段失焦验证已由 Ant Design Vue 的表单验证接管，无需手动处理
 
 // 提交表单
 const handleSubmit = async () => {
