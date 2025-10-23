@@ -123,11 +123,13 @@ const handleSubmit = async () => {
 
 <style scoped>
 .login-page {
-  min-height: 100vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow-y: auto;
 }
 
 .login-container {
