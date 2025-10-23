@@ -127,7 +127,6 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -213,23 +212,6 @@ h1 {
 
 .footer-link a:hover {
   text-decoration: underline;
-}
-
-@media (max-width: 480px) {
-  .login-container {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .logo {
-    width: 48px;
-    height: 48px;
-    font-size: 24px;
-  }
-
-  h1 {
-    font-size: 20px;
-  }
 }
 </style>
 
