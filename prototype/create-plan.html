@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建行程 - AI 旅行规划师</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 32px;
+            margin-left: 48px;
+        }
+
+        .nav-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 4px 8px;
+        }
+
+        .nav-link.active {
+            color: #667eea;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* 主内容区 */
+        .main-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .page-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 32px;
+        }
+
+        /* Tab 切换 */
+        .tab-container {
+            display: flex;
+            border-bottom: 2px solid #e8e8e8;
+            margin-bottom: 32px;
+        }
+
+        .tab-item {
+            padding: 12px 24px;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s;
+        }
+
+        .tab-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        /* 语音输入 */
+        .voice-input-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 0;
+        }
+
+        .mic-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #667eea;
+            border: none;
+            color: white;
+            font-size: 48px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mic-button:hover {
+            transform: scale(1.05);
+        }
+
+        .mic-button.recording {
+            background: #ff4d4f;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(255, 77, 79, 0);
+            }
+        }
+
+        .voice-tip {
+            margin-top: 24px;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .voice-tip.recording {
+            color: #ff4d4f;
+        }
+
+        .voice-tip.recognizing {
+            color: #1890ff;
+        }
+
+        .text-preview {
+            margin-top: 32px;
+            width: 100%;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 120px;
+            position: relative;
+            display: none;
+        }
+
+        .text-preview.show {
+            display: block;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .preview-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1a1a1a;
+        }
+
+        .retry-link {
+            color: #667eea;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* 文字输入 */
+        .text-input-area {
+            display: none;
+        }
+
+        .text-input-area.active {
+            display: block;
+        }
+
+        .text-input {
+            width: 100%;
+            height: 240px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .char-count {
+            text-align: right;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 补充信息 */
+        .additional-info {
+            margin-top: 24px;
+        }
+
+        .collapse-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .collapse-title {
+            font-size: 14px;
+            color: #1a1a1a;
+        }
+
+        .collapse-arrow {
+            color: #666;
+            transition: transform 0.3s;
+        }
+
+        .collapse-arrow.open {
+            transform: rotate(180deg);
+        }
+
+        .collapse-content {
+            display: none;
+            padding: 24px 16px;
+            border: 1px solid #e8e8e8;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .collapse-content.show {
+            display: block;
+        }
+
+        .collapse-hint {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            padding: 0 12px;
+            font-size: 14px;
+        }
+
+        .form-input.small {
+            width: 200px;
+        }
+
+        .input-suffix {
+            margin-left: 8px;
+            color: #666;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+        }
+
+        .checkbox-item.selected {
+            background: #e6f7ff;
+            border-color: #91d5ff;
+            color: #1890ff;
+        }
+
+        /* 生成按钮 */
+        .generate-section {
+            margin-top: 32px;
+            text-align: center;
+        }
+
+        .generate-btn {
+            padding: 12px 48px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .generate-btn:hover {
+            background: #5568d3;
+        }
+
+        .generate-btn:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .checkbox-group {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">✈️</div>
+            <div class="header-title">AI 旅行规划师</div>
+            <nav class="header-nav">
+                <a href="home.html" class="nav-link">我的行程</a>
+                <a href="create-plan.html" class="nav-link active">创建行程</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="user-avatar">张</div>
+            <div class="user-name">张三</div>
+        </div>
+    </header>
+
+    <!-- 主内容 -->
+    <div class="main-container">
+        <div class="page-card">
+            <h1 class="page-title">创建新行程</h1>
+            <p class="page-subtitle">告诉 AI 你的旅行需求，让我们为你规划完美行程</p>
+
+            <!-- Tab 切换 -->
+            <div class="tab-container">
+                <div class="tab-item active" onclick="switchTab('voice')">语音输入</div>
+                <div class="tab-item" onclick="switchTab('text')">文字输入</div>
+            </div>
+
+            <!-- 语音输入区域 -->
+            <div class="voice-input-area" id="voiceArea">
+                <button class="mic-button" id="micButton" onclick="toggleRecording()">🎤</button>
+                <div class="voice-tip" id="voiceTip">点击开始语音输入</div>
+                
+                <div class="text-preview" id="textPreview">
+                    <div class="preview-header">
+                        <span style="font-weight: 600;">识别结果：</span>
+                        <span class="retry-link" onclick="retryVoice()">重新录音</span>
+                    </div>
+                    <div class="preview-content" contenteditable="true">
+                        我想去日本旅行5天，预算1万元，喜欢美食和动漫，带孩子，希望行程轻松一些
+                    </div>
+                </div>
+            </div>
+
+            <!-- 文字输入区域 -->
+            <div class="text-input-area" id="textArea">
+                <textarea class="text-input" id="textInput" maxlength="500" placeholder="请描述你的旅行需求，例如：我想去日本旅行 5 天，预算 1 万元，喜欢美食和动漫，带孩子，希望行程轻松一些"></textarea>
+                <div class="char-count"><span id="charCount">0</span>/500</div>
+            </div>
+
+            <!-- 补充信息 -->
+            <div class="additional-info">
+                <div class="collapse-header" onclick="toggleCollapse()">
+                    <span class="collapse-title">补充详细信息（可选）</span>
+                    <span class="collapse-arrow" id="collapseArrow">▼</span>
+                </div>
+                <div class="collapse-content" id="collapseContent">
+                    <div class="collapse-hint">如果已在上方描述中包含这些信息，可以跳过此部分</div>
+                    
+                    <div class="form-row">
+                        <label class="form-label">旅行目的地</label>
+                        <input type="text" class="form-input" placeholder="例如：日本东京">
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">旅行天数</label>
+                        <input type="number" class="form-input small" placeholder="例如：5" min="1" max="30">
+                        <span class="input-suffix">天</span>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">预算范围</label>
+                        <input type="number" class="form-input small" placeholder="例如：10000" min="0">
+                        <span class="input-suffix">元</span>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">同行人数</label>
+                        <input type="number" class="form-input small" placeholder="例如：2" min="1" max="20">
+                        <span class="input-suffix">人</span>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">旅行偏好</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">美食</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">景点</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">购物</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">文化</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">自然</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">历史</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">艺术</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">运动</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">亲子</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">休闲</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">冒险</div>
+                            <div class="checkbox-item" onclick="toggleCheckbox(this)">摄影</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">出发日期</label>
+                        <input type="date" class="form-input small">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 生成按钮 -->
+            <div class="generate-section">
+                <button class="generate-btn" onclick="generatePlan()">
+                    <span>✨</span>
+                    <span>生成行程</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRecording = false;
+
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab-item');
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'voice') {
+                tabs[0].classList.add('active');
+                document.getElementById('voiceArea').style.display = 'flex';
+                document.getElementById('textArea').classList.remove('active');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('voiceArea').style.display = 'none';
+                document.getElementById('textArea').classList.add('active');
+            }
+        }
+
+        function toggleRecording() {
+            const button = document.getElementById('micButton');
+            const tip = document.getElementById('voiceTip');
+            const preview = document.getElementById('textPreview');
+            
+            if (!isRecording) {
+                isRecording = true;
+                button.classList.add('recording');
+                tip.textContent = '正在录音中，再次点击结束...';
+                tip.classList.add('recording');
+            } else {
+                isRecording = false;
+                button.classList.remove('recording');
+                tip.textContent = '正在识别中，请稍候...';
+                tip.classList.remove('recording');
+                tip.classList.add('recognizing');
+                
+                // 模拟识别过程
+                setTimeout(() => {
+                    tip.textContent = '点击开始语音输入';
+                    tip.classList.remove('recognizing');
+                    preview.classList.add('show');
+                }, 1500);
+            }
+        }
+
+        function retryVoice() {
+            document.getElementById('textPreview').classList.remove('show');
+        }
+
+        function toggleCollapse() {
+            const content = document.getElementById('collapseContent');
+            const arrow = document.getElementById('collapseArrow');
+            content.classList.toggle('show');
+            arrow.classList.toggle('open');
+        }
+
+        function toggleCheckbox(element) {
+            element.classList.toggle('selected');
+        }
+
+        function generatePlan() {
+            alert('AI 正在规划中...\n\n这是原型图演示，实际会跳转到生成的行程详情页');
+            setTimeout(() => {
+                window.location.href = 'plan-detail.html';
+            }, 1000);
+        }
+
+        // 字数统计
+        document.getElementById('textInput').addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
+        });
+    </script>
+</body>
+</html>
+
+

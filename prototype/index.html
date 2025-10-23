@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原型图导航 - AI 旅行规划师</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 16px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .version {
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            font-size: 28px;
+        }
+
+        .section-desc {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .page-card {
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+
+        .page-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .page-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .page-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .page-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .page-path {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #999;
+            font-family: 'Courier New', monospace;
+        }
+
+        .info-box {
+            background: #f0f5ff;
+            border: 1px solid #adc6ff;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .info-list {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+            padding-left: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 28px;
+            }
+
+            .page-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">✈️</div>
+            <h1>AI 旅行规划师</h1>
+            <p class="subtitle">产品原型图导航</p>
+            <p class="version">Version 1.0.0 | 基于 PRD v1.0.0</p>
+        </div>
+
+        <div class="info-box">
+            <div class="info-title">📋 原型图说明</div>
+            <ul class="info-list">
+                <li>本原型图严格按照 PRD 文档设计，展示所有核心功能页面</li>
+                <li>包含完整的页面交互和跳转逻辑（部分为演示效果）</li>
+                <li>响应式设计，支持桌面端和移动端查看</li>
+                <li>点击下方卡片可访问对应页面</li>
+            </ul>
+        </div>
+
+        <!-- 用户认证模块 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="section-icon">🔐</span>
+                用户认证模块
+            </h2>
+            <p class="section-desc">用户注册、登录、登出功能</p>
+            
+            <div class="page-grid">
+                <a href="register.html" class="page-card">
+                    <div class="page-icon">📝</div>
+                    <div class="page-title">用户注册</div>
+                    <div class="page-desc">
+                        邮箱注册功能，包含用户名、邮箱、密码等字段验证
+                    </div>
+                    <div class="page-path">/register</div>
+                </a>
+
+                <a href="login.html" class="page-card">
+                    <div class="page-icon">🔑</div>
+                    <div class="page-title">用户登录</div>
+                    <div class="page-desc">
+                        邮箱密码登录，支持密码可见性切换
+                    </div>
+                    <div class="page-path">/login</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 行程规划模块 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="section-icon">🗺️</span>
+                行程规划模块
+            </h2>
+            <p class="section-desc">创建行程、查看行程列表、行程详情展示</p>
+            
+            <div class="page-grid">
+                <a href="home.html" class="page-card">
+                    <div class="page-icon">🏠</div>
+                    <div class="page-title">行程列表（首页）</div>
+                    <div class="page-desc">
+                        显示用户所有行程，包含左侧列表和顶部导航栏
+                    </div>
+                    <div class="page-path">/</div>
+                </a>
+
+                <a href="create-plan.html" class="page-card">
+                    <div class="page-icon">✨</div>
+                    <div class="page-title">创建行程</div>
+                    <div class="page-desc">
+                        支持语音和文字输入，可补充详细旅行参数
+                    </div>
+                    <div class="page-path">/create</div>
+                </a>
+
+                <a href="plan-detail.html" class="page-card">
+                    <div class="page-icon">📖</div>
+                    <div class="page-title">行程详情</div>
+                    <div class="page-desc">
+                        包含概览、每日行程、住宿、交通、预算四个Tab页
+                    </div>
+                    <div class="page-path">/plan/:id</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 费用管理模块 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="section-icon">💰</span>
+                费用管理模块
+            </h2>
+            <p class="section-desc">添加和管理支出记录</p>
+            
+            <div class="page-grid">
+                <a href="add-expense.html" class="page-card">
+                    <div class="page-icon">➕</div>
+                    <div class="page-title">添加支出记录</div>
+                    <div class="page-desc">
+                        支持语音和手动输入，记录旅行过程中的各项支出
+                    </div>
+                    <div class="page-path">弹窗组件</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 功能特色 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="section-icon">⭐</span>
+                功能特色说明
+            </h2>
+            
+            <div class="info-box" style="background: #fff7e6; border-color: #ffd591;">
+                <div class="info-title">🎤 语音输入功能</div>
+                <ul class="info-list">
+                    <li>创建行程支持语音描述需求</li>
+                    <li>添加支出支持语音输入</li>
+                    <li>AI 自动识别并结构化数据</li>
+                </ul>
+            </div>
+
+            <div class="info-box" style="background: #f6ffed; border-color: #b7eb8f;">
+                <div class="info-title">🤖 AI 智能规划</div>
+                <ul class="info-list">
+                    <li>根据用户需求自动生成完整行程</li>
+                    <li>包含每日活动、住宿推荐、交通方案</li>
+                    <li>智能预算分配和费用估算</li>
+                </ul>
+            </div>
+
+            <div class="info-box" style="background: #fff1f0; border-color: #ffccc7;">
+                <div class="info-title">📍 地图导航</div>
+                <ul class="info-list">
+                    <li>集成高德地图服务</li>
+                    <li>一键导航到活动地点</li>
+                    <li>支持移动端直接唤起地图 App</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 技术架构 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="section-icon">🛠️</span>
+                技术架构
+            </h2>
+            
+            <div class="page-grid">
+                <div class="page-card" style="cursor: default; border-color: #e8e8e8;">
+                    <div class="page-icon">🎨</div>
+                    <div class="page-title">前端技术</div>
+                    <div class="page-desc">
+                        Vue 3 + TypeScript + Vite + Pinia + Ant Design Vue
+                    </div>
+                </div>
+
+                <div class="page-card" style="cursor: default; border-color: #e8e8e8;">
+                    <div class="page-icon">💾</div>
+                    <div class="page-title">后端服务</div>
+                    <div class="page-desc">
+                        Supabase (数据库、认证、存储)
+                    </div>
+                </div>
+
+                <div class="page-card" style="cursor: default; border-color: #e8e8e8;">
+                    <div class="page-icon">🗺️</div>
+                    <div class="page-title">地图服务</div>
+                    <div class="page-desc">
+                        高德地图 API (地理编码、导航)
+                    </div>
+                </div>
+
+                <div class="page-card" style="cursor: default; border-color: #e8e8e8;">
+                    <div class="page-icon">🤖</div>
+                    <div class="page-title">AI 能力</div>
+                    <div class="page-desc">
+                        阿里云百炼 (语音识别、大模型对话)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>AI 旅行规划师 © 2025 | 原型图仅用于产品设计演示</p>
+            <p style="margin-top: 8px;">建议使用 Chrome、Safari、Firefox 等现代浏览器查看</p>
+        </div>
+    </div>
+</body>
+</html>
+
+
+

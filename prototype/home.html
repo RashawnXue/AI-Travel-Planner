@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的行程 - AI 旅行规划师</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 32px;
+            margin-left: 48px;
+        }
+
+        .nav-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 4px 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .user-name {
+            color: #1a1a1a;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-width: 120px;
+            display: none;
+        }
+
+        .user-dropdown.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .dropdown-item:hover {
+            background: #f5f5f5;
+        }
+
+        .dropdown-item.danger {
+            color: #ff4d4f;
+        }
+
+        /* 主内容区 */
+        .main-container {
+            display: flex;
+            padding-top: 64px;
+            min-height: 100vh;
+        }
+
+        /* 左侧行程列表 */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e8e8e8;
+            padding: 24px;
+            overflow-y: auto;
+            height: calc(100vh - 64px);
+            position: fixed;
+            left: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .collapse-btn {
+            cursor: pointer;
+            color: #666;
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .sidebar.collapsed .collapse-btn {
+            transform: rotate(180deg);
+        }
+
+        /* 展开按钮 */
+        .expand-btn {
+            position: fixed;
+            left: 0;
+            top: 80px;
+            width: 32px;
+            height: 48px;
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 99;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .expand-btn.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .expand-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .create-btn {
+            width: 100%;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .create-btn:hover {
+            background: #5568d3;
+        }
+
+        .plan-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .plan-card {
+            padding: 16px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .plan-card:hover {
+            background: #f5f5f5;
+            border-left: 3px solid #667eea;
+        }
+
+        .plan-card.active {
+            background: #e6f7ff;
+            border-left: 3px solid #667eea;
+        }
+
+        .plan-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .plan-meta {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .plan-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .plan-budget {
+            font-size: 14px;
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+
+        .plan-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        /* 右侧内容区 */
+        .content-area {
+            margin-left: 320px;
+            flex: 1;
+            transition: margin-left 0.3s ease;
+            overflow-y: auto;
+            height: calc(100vh - 64px);
+        }
+
+        .content-area.expanded {
+            margin-left: 0;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 112px);
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* 行程详情样式 */
+        .plan-detail {
+            display: none;
+        }
+
+        .plan-detail.active {
+            display: block;
+        }
+
+        /* 行程概览区 */
+        .overview-section {
+            background: #fafafa;
+            padding: 32px 24px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .overview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 48px;
+        }
+
+        .overview-left {
+            flex: 1;
+        }
+
+        .detail-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+
+        .plan-summary {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .overview-right {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #1a1a1a;
+        }
+
+        .info-value.highlight {
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+
+        /* Tab 导航 */
+        .tab-nav {
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .tab-nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            padding: 0 24px;
+        }
+
+        .tab-item {
+            padding: 14px 24px;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .tab-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        /* 内容区 */
+        .content-section {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 0 24px;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 每日行程 Tab */
+        .daily-plan-container {
+            display: flex;
+            gap: 24px;
+        }
+
+        .day-list {
+            width: 160px;
+            border-right: 1px solid #e8e8e8;
+            padding-right: 16px;
+        }
+
+        .day-item {
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .day-item:hover {
+            background: #f5f5f5;
+        }
+
+        .day-item.active {
+            background: #e6f7ff;
+        }
+
+        .day-number {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+
+        .day-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .day-count {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .activity-timeline {
+            flex: 1;
+        }
+
+        .activity-card {
+            position: relative;
+            padding-left: 48px;
+            margin-bottom: 32px;
+        }
+
+        .activity-time {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 32px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .activity-dot {
+            position: absolute;
+            left: 32px;
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 3px solid #e6f7ff;
+        }
+
+        .activity-line {
+            position: absolute;
+            left: 37px;
+            top: 20px;
+            bottom: -32px;
+            width: 2px;
+            background: #e8e8e8;
+        }
+
+        .activity-content {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .activity-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+
+        .activity-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .activity-location-text {
+            flex: 1;
+        }
+
+        .location-name {
+            font-size: 14px;
+            color: #1a1a1a;
+        }
+
+        .location-address {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .nav-btn {
+            padding: 4px 12px;
+            background: white;
+            color: #667eea;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .activity-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .activity-desc {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .activity-tip {
+            background: #fff7e6;
+            border: 1px solid #ffd591;
+            border-radius: 4px;
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            color: #d46b08;
+        }
+
+        .day-total {
+            text-align: right;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 8px;
+            margin-top: 24px;
+            font-size: 16px;
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+
+        /* 住宿安排 Tab */
+        .accommodation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .accommodation-card {
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .accommodation-day {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+
+        .hotel-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .hotel-address {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .hotel-meta {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 12px;
+        }
+
+        .hotel-price {
+            font-size: 16px;
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+
+        .hotel-rating {
+            font-size: 14px;
+            color: #faad14;
+        }
+
+        .hotel-reason {
+            background: #f0f5ff;
+            border: 1px solid #adc6ff;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1a1a1a;
+        }
+
+        /* 交通信息 Tab */
+        .transport-overview {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .transport-overview-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .transport-overview-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .transport-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .transport-card {
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .transport-type {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .transport-type.flight {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .transport-type.train {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .transport-type.metro {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .transport-route {
+            flex: 1;
+            font-size: 14px;
+            color: #1a1a1a;
+        }
+
+        .transport-cost {
+            font-size: 16px;
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+
+        .transport-total {
+            text-align: right;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 18px;
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+
+        /* 费用预算 Tab */
+        .budget-overview {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .budget-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+
+        .budget-chart {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#1890ff 0% 75%, #e8e8e8 75% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .budget-inner {
+            width: 140px;
+            height: 140px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .budget-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+
+        .budget-percent {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .budget-summary {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+
+        .budget-breakdown {
+            margin-bottom: 24px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .breakdown-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 120px;
+            font-size: 14px;
+        }
+
+        .breakdown-bar {
+            flex: 1;
+            height: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .breakdown-fill {
+            height: 100%;
+            background: #1890ff;
+            border-radius: 10px;
+        }
+
+        .breakdown-amount {
+            width: 100px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .add-expense-btn {
+            width: 100%;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+
+        .expense-records {
+            margin-top: 32px;
+        }
+
+        .expense-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .expense-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .expense-table th {
+            background: #fafafa;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .expense-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 14px;
+        }
+
+        .expense-category {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .category-food {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .category-transport {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .expense-amount {
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+
+        .delete-btn {
+            color: #ff4d4f;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .header-nav {
+                display: none;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 101;
+            }
+
+            .sidebar:not(.collapsed) {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-left: 0 !important;
+            }
+
+            .expand-btn.show {
+                z-index: 100;
+            }
+
+            .overview-container {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .daily-plan-container {
+                flex-direction: column;
+            }
+
+            .day-list {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e8e8e8;
+                padding-bottom: 16px;
+                padding-right: 0;
+                display: flex;
+                overflow-x: auto;
+                gap: 8px;
+            }
+
+            .day-item {
+                min-width: 120px;
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">✈️</div>
+            <div class="header-title">AI 旅行规划师</div>
+            <nav class="header-nav">
+                <a href="home.html" class="nav-link active">我的行程</a>
+                <a href="create-plan.html" class="nav-link">创建行程</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="user-avatar" onclick="toggleDropdown()">张</div>
+            <div class="user-name" onclick="toggleDropdown()">张三</div>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="dropdown-item">个人中心</div>
+                <div class="dropdown-item danger" onclick="logout()">退出登录</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <div class="main-container">
+        <!-- 展开按钮 -->
+        <div class="expand-btn" id="expandBtn" onclick="toggleSidebar()">▶</div>
+
+        <!-- 左侧行程列表 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">我的行程</h2>
+                <span class="collapse-btn" onclick="toggleSidebar()">◀</span>
+            </div>
+            <button class="create-btn" onclick="location.href='create-plan.html'">+ 创建新行程</button>
+            
+            <div class="plan-list">
+                <div class="plan-card active" data-plan-id="1">
+                    <div class="plan-title">日本东京深度游 - 探索动漫与美食之旅</div>
+                    <div class="plan-meta">日本东京 · 5天</div>
+                    <div class="plan-date">2025-12-01 出发</div>
+                    <div class="plan-budget">¥10,000</div>
+                    <div class="plan-time">3天前创建</div>
+                </div>
+
+                <div class="plan-card" data-plan-id="2">
+                    <div class="plan-title">成都美食之旅</div>
+                    <div class="plan-meta">四川成都 · 3天</div>
+                    <div class="plan-date">2025-11-20 出发</div>
+                    <div class="plan-budget">¥3,000</div>
+                    <div class="plan-time">1周前创建</div>
+                </div>
+
+                <div class="plan-card" data-plan-id="3">
+                    <div class="plan-title">云南大理丽江古城悠闲之旅</div>
+                    <div class="plan-meta">云南大理 · 7天</div>
+                    <div class="plan-date">2025-10-15 出发</div>
+                    <div class="plan-budget">¥5,500</div>
+                    <div class="plan-time">2周前创建</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 右侧内容区 -->
+        <main class="content-area" id="contentArea">
+            <!-- 空状态 -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">📋</div>
+                <div class="empty-text">请在左侧选择一个行程查看详情，或<a href="create-plan.html" style="color: #667eea;">创建新行程</a></div>
+            </div>
+
+            <!-- 行程详情 - 东京 -->
+            <div class="plan-detail active" id="planDetail1">
+                <!-- 行程概览 -->
+                <section class="overview-section">
+                    <div class="overview-container">
+                        <div class="overview-left">
+                            <h1 class="detail-title">日本东京深度游 - 探索动漫与美食之旅</h1>
+                            <p class="plan-summary">
+                                这是一次专为动漫爱好者和美食探索者打造的东京之旅。我们将带您游览秋叶原的动漫圣地，品尝地道的寿司、拉面，
+                                体验传统日式温泉，在浅草寺感受历史文化，在台场欣赏现代都市风光。行程安排轻松舒适，特别适合亲子出行。
+                            </p>
+                        </div>
+                        <div class="overview-right">
+                            <div class="info-item">
+                                <div class="info-icon">📍</div>
+                                <div class="info-label">目的地</div>
+                                <div class="info-value">日本东京</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">📅</div>
+                                <div class="info-label">行程</div>
+                                <div class="info-value">5 天</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">🗓️</div>
+                                <div class="info-label">出发</div>
+                                <div class="info-value">2025-12-01</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">💰</div>
+                                <div class="info-label">预算</div>
+                                <div class="info-value highlight">¥ 10,000</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">👥</div>
+                                <div class="info-label">同行</div>
+                                <div class="info-value">2 人</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">🏷️</div>
+                                <div class="info-label">偏好</div>
+                                <div class="info-value">美食, 动漫, 亲子</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab 导航 -->
+                <nav class="tab-nav">
+                    <div class="tab-nav-container">
+                        <div class="tab-item active" onclick="switchTab(0)">每日行程</div>
+                        <div class="tab-item" onclick="switchTab(1)">住宿安排</div>
+                        <div class="tab-item" onclick="switchTab(2)">交通信息</div>
+                        <div class="tab-item" onclick="switchTab(3)">费用预算</div>
+                    </div>
+                </nav>
+
+                <!-- 内容区 -->
+                <section class="content-section">
+                    <!-- 每日行程 Tab -->
+                    <div class="tab-content active">
+                        <div class="daily-plan-container">
+                            <div class="day-list">
+                                <div class="day-item active">
+                                    <div class="day-number">第 1 天</div>
+                                    <div class="day-title">初识东京</div>
+                                    <div class="day-count">4 个活动</div>
+                                </div>
+                                <div class="day-item">
+                                    <div class="day-number">第 2 天</div>
+                                    <div class="day-title">动漫朝圣</div>
+                                    <div class="day-count">5 个活动</div>
+                                </div>
+                                <div class="day-item">
+                                    <div class="day-number">第 3 天</div>
+                                    <div class="day-title">传统文化</div>
+                                    <div class="day-count">4 个活动</div>
+                                </div>
+                                <div class="day-item">
+                                    <div class="day-number">第 4 天</div>
+                                    <div class="day-title">现代都市</div>
+                                    <div class="day-count">4 个活动</div>
+                                </div>
+                                <div class="day-item">
+                                    <div class="day-number">第 5 天</div>
+                                    <div class="day-title">购物返程</div>
+                                    <div class="day-count">3 个活动</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-timeline">
+                                <div class="activity-card">
+                                    <div class="activity-time">09:00</div>
+                                    <div class="activity-dot"></div>
+                                    <div class="activity-line"></div>
+                                    <div class="activity-content">
+                                        <h3 class="activity-title">浅草寺参观</h3>
+                                        <div class="activity-location">
+                                            <div class="activity-location-text">
+                                                <div class="location-name">📍 浅草寺</div>
+                                                <div class="location-address">东京都台东区浅草2-3-1</div>
+                                            </div>
+                                            <button class="nav-btn">导航</button>
+                                        </div>
+                                        <div class="activity-meta">
+                                            <span>⏱️ 120 分钟</span>
+                                            <span>💴 ¥ 0</span>
+                                        </div>
+                                        <div class="activity-desc">
+                                            浅草寺是东京最古老的寺庙，也是东京的象征之一。在这里可以感受传统的日本寺庙文化，
+                                            漫步仲见世商店街，品尝传统小吃，购买特色纪念品。
+                                        </div>
+                                        <div class="activity-tip">
+                                            💡 建议早上前往，避开人流高峰。寺庙免费参观，但可以购买御守作为纪念。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-card">
+                                    <div class="activity-time">12:00</div>
+                                    <div class="activity-dot"></div>
+                                    <div class="activity-line"></div>
+                                    <div class="activity-content">
+                                        <h3 class="activity-title">筑地市场午餐</h3>
+                                        <div class="activity-location">
+                                            <div class="activity-location-text">
+                                                <div class="location-name">📍 筑地市场</div>
+                                                <div class="location-address">东京都中央区筑地5-2-1</div>
+                                            </div>
+                                            <button class="nav-btn">导航</button>
+                                        </div>
+                                        <div class="activity-meta">
+                                            <span>⏱️ 90 分钟</span>
+                                            <span>💴 ¥ 300</span>
+                                        </div>
+                                        <div class="activity-desc">
+                                            前往筑地市场品尝最新鲜的海鲜寿司。虽然批发市场已搬迁，但外围市场依然保留，
+                                            这里有众多寿司店和海鲜餐厅，是品尝地道日本料理的绝佳选择。
+                                        </div>
+                                        <div class="activity-tip">
+                                            💡 推荐尝试寿司大或大和寿司，需要排队但物有所值。人均消费约3000日元。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-card">
+                                    <div class="activity-time">14:30</div>
+                                    <div class="activity-dot"></div>
+                                    <div class="activity-line"></div>
+                                    <div class="activity-content">
+                                        <h3 class="activity-title">东京晴空塔观景</h3>
+                                        <div class="activity-location">
+                                            <div class="activity-location-text">
+                                                <div class="location-name">📍 东京晴空塔</div>
+                                                <div class="location-address">东京都墨田区押上1-1-2</div>
+                                            </div>
+                                            <button class="nav-btn">导航</button>
+                                        </div>
+                                        <div class="activity-meta">
+                                            <span>⏱️ 120 分钟</span>
+                                            <span>💴 ¥ 200</span>
+                                        </div>
+                                        <div class="activity-desc">
+                                            登上东京晴空塔，在350米和450米的观景台俯瞰整个东京。天气晴朗时甚至可以看到富士山。
+                                            塔下的商业设施也值得逛逛，有很多适合孩子的主题商店。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-card">
+                                    <div class="activity-time">18:00</div>
+                                    <div class="activity-dot"></div>
+                                    <div class="activity-content">
+                                        <h3 class="activity-title">上野公园散步与晚餐</h3>
+                                        <div class="activity-location">
+                                            <div class="activity-location-text">
+                                                <div class="location-name">📍 上野公园</div>
+                                                <div class="location-address">东京都台东区上野公园5-20</div>
+                                            </div>
+                                            <button class="nav-btn">导航</button>
+                                        </div>
+                                        <div class="activity-meta">
+                                            <span>⏱️ 120 分钟</span>
+                                            <span>💴 ¥ 250</span>
+                                        </div>
+                                        <div class="activity-desc">
+                                            在上野公园悠闲散步，感受东京市民的日常生活。公园内有动物园、美术馆等设施。
+                                            晚餐可以在附近的餐厅品尝拉面或烤肉。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="day-total">当日预计花费: ¥ 750</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 住宿安排 Tab -->
+                    <div class="tab-content">
+                        <div class="accommodation-list">
+                            <div class="accommodation-card">
+                                <div class="accommodation-day">第 1-2 天住宿</div>
+                                <div class="hotel-name">东京浅草雷门大门酒店</div>
+                                <div class="hotel-address">
+                                    📍 东京都台东区雷门2-16-11
+                                    <button class="nav-btn">查看地图</button>
+                                </div>
+                                <div class="hotel-meta">
+                                    <div class="hotel-price">¥ 600-800/晚</div>
+                                    <div class="hotel-rating">⭐ 4.5</div>
+                                </div>
+                                <div class="hotel-reason">
+                                    该酒店位于浅草寺附近，交通便利，步行即可到达浅草寺和雷门。周边有多条地铁线路，
+                                    方便前往东京各处。酒店房间干净整洁，服务周到，特别适合带孩子的家庭入住。
+                                    早餐提供日式和西式两种选择。
+                                </div>
+                            </div>
+
+                            <div class="accommodation-card">
+                                <div class="accommodation-day">第 3-4 天住宿</div>
+                                <div class="hotel-name">新宿京王广场酒店</div>
+                                <div class="hotel-address">
+                                    📍 东京都新宿区西新宿2-2-1
+                                    <button class="nav-btn">查看地图</button>
+                                </div>
+                                <div class="hotel-meta">
+                                    <div class="hotel-price">¥ 800-1000/晚</div>
+                                    <div class="hotel-rating">⭐ 4.7</div>
+                                </div>
+                                <div class="hotel-reason">
+                                    位于新宿中心地带，是东京的交通枢纽，可轻松前往涩谷、原宿等时尚区域。
+                                    酒店设施完善，有多家餐厅可供选择。高层客房可欣赏东京夜景。
+                                    距离新宿御苑和都厅展望台都很近。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 交通信息 Tab -->
+                    <div class="tab-content">
+                        <div class="transport-overview">
+                            <div class="transport-overview-title">交通概述</div>
+                            <div class="transport-overview-content">
+                                本次行程主要依靠东京发达的地铁系统出行。建议购买东京地铁72小时通票（约1500日元），
+                                可无限次乘坐东京Metro和都营地铁。从机场到市区建议乘坐成田特快（N'EX）或京成Skyliner。
+                                市内景点间距离较近，部分路段也可步行游览。
+                            </div>
+                        </div>
+
+                        <div class="transport-list">
+                            <div class="transport-card">
+                                <div class="transport-type flight">✈️ 飞机</div>
+                                <div class="transport-route">往返机票：北京 - 东京成田机场</div>
+                                <div class="transport-cost">¥ 3,500</div>
+                            </div>
+
+                            <div class="transport-card">
+                                <div class="transport-type train">🚄 火车</div>
+                                <div class="transport-route">成田特快：成田机场 - 东京市区（往返）</div>
+                                <div class="transport-cost">¥ 400</div>
+                            </div>
+
+                            <div class="transport-card">
+                                <div class="transport-type metro">🚇 地铁</div>
+                                <div class="transport-route">东京地铁72小时通票 x2</div>
+                                <div class="transport-cost">¥ 200</div>
+                            </div>
+
+                            <div class="transport-card">
+                                <div class="transport-type metro">🚇 地铁</div>
+                                <div class="transport-route">其他短程交通费用</div>
+                                <div class="transport-cost">¥ 100</div>
+                            </div>
+                        </div>
+
+                        <div class="transport-total">交通费用总计: ¥ 4,200</div>
+                    </div>
+
+                    <!-- 费用预算 Tab -->
+                    <div class="tab-content">
+                        <div class="budget-overview">
+                            <div class="budget-circle">
+                                <div class="budget-chart">
+                                    <div class="budget-inner">
+                                        <div class="budget-amount">¥7,500</div>
+                                        <div class="budget-percent">75%</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="budget-summary">
+                                <div>总预算: ¥10,000</div>
+                                <div>剩余预算: ¥2,500</div>
+                            </div>
+                        </div>
+
+                        <div class="budget-breakdown">
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <span>✈️</span>
+                                    <span>交通</span>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 56%; background: #1890ff;"></div>
+                                </div>
+                                <div class="breakdown-amount">¥ 4,200</div>
+                            </div>
+
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <span>🏨</span>
+                                    <span>住宿</span>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 32%; background: #52c41a;"></div>
+                                </div>
+                                <div class="breakdown-amount">¥ 2,400</div>
+                            </div>
+
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <span>🍜</span>
+                                    <span>餐饮</span>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 20%; background: #fa8c16;"></div>
+                                </div>
+                                <div class="breakdown-amount">¥ 1,500</div>
+                            </div>
+
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <span>🎫</span>
+                                    <span>活动</span>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 13.3%; background: #722ed1;"></div>
+                                </div>
+                                <div class="breakdown-amount">¥ 1,000</div>
+                            </div>
+
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <span>🛍️</span>
+                                    <span>购物</span>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 5.3%; background: #eb2f96;"></div>
+                                </div>
+                                <div class="breakdown-amount">¥ 400</div>
+                            </div>
+
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <span>💼</span>
+                                    <span>其他</span>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="breakdown-fill" style="width: 0%; background: #8c8c8c;"></div>
+                                </div>
+                                <div class="breakdown-amount">¥ 0</div>
+                            </div>
+                        </div>
+
+                        <button class="add-expense-btn">+ 添加支出记录</button>
+
+                        <div class="expense-records">
+                            <h3 class="expense-title">支出记录</h3>
+                            <table class="expense-table">
+                                <thead>
+                                    <tr>
+                                        <th>日期时间</th>
+                                        <th>分类</th>
+                                        <th>描述</th>
+                                        <th style="text-align: right;">金额</th>
+                                        <th style="text-align: center;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>2025-12-01 12:30</td>
+                                        <td><span class="expense-category category-food">餐饮</span></td>
+                                        <td>筑地市场午餐</td>
+                                        <td style="text-align: right;" class="expense-amount">¥ 150.00</td>
+                                        <td style="text-align: center;"><button class="delete-btn">删除</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2025-12-01 09:00</td>
+                                        <td><span class="expense-category category-transport">交通</span></td>
+                                        <td>机场到酒店交通</td>
+                                        <td style="text-align: right;" class="expense-amount">¥ 200.00</td>
+                                        <td style="text-align: center;"><button class="delete-btn">删除</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 行程详情 - 成都 -->
+            <div class="plan-detail" id="planDetail2">
+                <section class="overview-section">
+                    <div class="overview-container">
+                        <div class="overview-left">
+                            <h1 class="detail-title">成都美食之旅</h1>
+                            <p class="plan-summary">
+                                体验正宗川菜，品尝火锅、串串、兔头等成都特色美食，感受巴蜀文化的魅力。
+                            </p>
+                        </div>
+                        <div class="overview-right">
+                            <div class="info-item">
+                                <div class="info-icon">📍</div>
+                                <div class="info-label">目的地</div>
+                                <div class="info-value">四川成都</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">📅</div>
+                                <div class="info-label">行程</div>
+                                <div class="info-value">3 天</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">🗓️</div>
+                                <div class="info-label">出发</div>
+                                <div class="info-value">2025-11-20</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">💰</div>
+                                <div class="info-label">预算</div>
+                                <div class="info-value highlight">¥ 3,000</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <nav class="tab-nav">
+                    <div class="tab-nav-container">
+                        <div class="tab-item active">每日行程</div>
+                        <div class="tab-item">住宿安排</div>
+                        <div class="tab-item">交通信息</div>
+                        <div class="tab-item">费用预算</div>
+                    </div>
+                </nav>
+
+                <section class="content-section">
+                    <div class="tab-content active">
+                        <p style="padding: 40px; text-align: center; color: #999;">详细行程规划中...</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 行程详情 - 云南 -->
+            <div class="plan-detail" id="planDetail3">
+                <section class="overview-section">
+                    <div class="overview-container">
+                        <div class="overview-left">
+                            <h1 class="detail-title">云南大理丽江古城悠闲之旅</h1>
+                            <p class="plan-summary">
+                                漫步大理古城和丽江古城，欣赏洱海风光，体验纳西族文化，享受云南的慢生活节奏。
+                            </p>
+                        </div>
+                        <div class="overview-right">
+                            <div class="info-item">
+                                <div class="info-icon">📍</div>
+                                <div class="info-label">目的地</div>
+                                <div class="info-value">云南大理</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">📅</div>
+                                <div class="info-label">行程</div>
+                                <div class="info-value">7 天</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">🗓️</div>
+                                <div class="info-label">出发</div>
+                                <div class="info-value">2025-10-15</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">💰</div>
+                                <div class="info-label">预算</div>
+                                <div class="info-value highlight">¥ 5,500</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <nav class="tab-nav">
+                    <div class="tab-nav-container">
+                        <div class="tab-item active">每日行程</div>
+                        <div class="tab-item">住宿安排</div>
+                        <div class="tab-item">交通信息</div>
+                        <div class="tab-item">费用预算</div>
+                    </div>
+                </nav>
+
+                <section class="content-section">
+                    <div class="tab-content active">
+                        <p style="padding: 40px; text-align: center; color: #999;">详细行程规划中...</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleDropdown() {
+            document.getElementById('userDropdown').classList.toggle('show');
+        }
+
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // 切换侧边栏显示/隐藏
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const expandBtn = document.getElementById('expandBtn');
+            const contentArea = document.getElementById('contentArea');
+            
+            sidebar.classList.toggle('collapsed');
+            expandBtn.classList.toggle('show');
+            contentArea.classList.toggle('expanded');
+        }
+
+        // 切换Tab
+        function switchTab(index) {
+            const currentDetail = document.querySelector('.plan-detail.active');
+            if (!currentDetail) return;
+            
+            const tabs = currentDetail.querySelectorAll('.tab-item');
+            const contents = currentDetail.querySelectorAll('.tab-content');
+            
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                    contents[i].classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                    contents[i].classList.remove('active');
+                }
+            });
+        }
+
+        // 显示行程详情
+        function showPlanDetail(planId) {
+            // 隐藏空状态
+            document.getElementById('emptyState').style.display = 'none';
+            
+            // 隐藏所有详情
+            document.querySelectorAll('.plan-detail').forEach(detail => {
+                detail.classList.remove('active');
+            });
+            
+            // 显示选中的详情
+            const selectedDetail = document.getElementById('planDetail' + planId);
+            if (selectedDetail) {
+                selectedDetail.classList.add('active');
+            }
+            
+            // 更新卡片激活状态
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            const selectedCard = document.querySelector(`.plan-card[data-plan-id="${planId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('active');
+            }
+        }
+
+        // 点击其他地方关闭下拉菜单
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.header-right')) {
+                document.getElementById('userDropdown').classList.remove('show');
+            }
+        });
+
+        // 点击行程卡片显示详情
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const planId = this.getAttribute('data-plan-id');
+                showPlanDetail(planId);
+            });
+        });
+
+        // 页面加载时默认显示第一个行程的详情
+        document.addEventListener('DOMContentLoaded', function() {
+            showPlanDetail(1);
+        });
+    </script>
+</body>
+</html>
+
+
