@@ -47,7 +47,12 @@
             v-model:value="formState.password"
             placeholder="请输入密码"
             size="large"
-          />
+          >
+            <template #iconRender="visible">
+              <EyeTwoTone v-if="visible" />
+              <EyeInvisibleOutlined v-else />
+            </template>
+          </a-input-password>
         </a-form-item>
 
         <!-- 确认密码 -->
@@ -60,7 +65,12 @@
             v-model:value="formState.confirmPassword"
             placeholder="请再次输入密码"
             size="large"
-          />
+          >
+            <template #iconRender="visible">
+              <EyeTwoTone v-if="visible" />
+              <EyeInvisibleOutlined v-else />
+            </template>
+          </a-input-password>
         </a-form-item>
 
         <!-- 提交按钮 -->
@@ -89,6 +99,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import { EyeTwoTone, EyeInvisibleOutlined } from '@ant-design/icons-vue'
 import { register } from '@/api/auth'
 import {
   validateUsername,
