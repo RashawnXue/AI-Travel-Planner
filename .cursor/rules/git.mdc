@@ -50,3 +50,4 @@ feat(web): implement email verification workflow
 - 提交前确保代码通过所有测试
 - 保持提交信息简洁明了，描述清楚变更内容
 - 避免大型提交，尽量将变更分解为小的、相关的提交
+- 准备提交git前，必须向我确认，未经我的允许不准提交
