@@ -227,11 +227,19 @@ h1 {
 }
 
 :deep(.ant-input),
-:deep(.ant-input-password) {
+:deep(.ant-input-password),
+:deep(.ant-input-password .ant-input) {
   height: 46px;
   border-radius: 8px;
   font-size: 15px;
   padding: 0 16px;
+  border: 1px solid #d9d9d9;
+}
+
+:deep(.ant-input:hover),
+:deep(.ant-input-password:hover),
+:deep(.ant-input-password .ant-input:hover) {
+  border-color: #667eea;
 }
 
 :deep(.ant-input:focus),
