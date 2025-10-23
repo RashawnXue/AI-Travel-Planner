@@ -14,10 +14,7 @@
         <a-form-item
           label="用户名"
           name="username"
-          :rules="[
-            { required: true, message: '请输入用户名' },
-            { validator: validateUsernameRule }
-          ]"
+          :rules="[{ validator: validateUsernameRule }]"
         >
           <a-input
             v-model:value="formState.username"
@@ -30,10 +27,7 @@
         <a-form-item
           label="邮箱"
           name="email"
-          :rules="[
-            { required: true, message: '请输入邮箱地址' },
-            { validator: validateEmailRule }
-          ]"
+          :rules="[{ validator: validateEmailRule }]"
         >
           <a-input
             v-model:value="formState.email"
@@ -47,10 +41,7 @@
         <a-form-item
           label="密码"
           name="password"
-          :rules="[
-            { required: true, message: '请输入密码' },
-            { validator: validatePasswordRule }
-          ]"
+          :rules="[{ validator: validatePasswordRule }]"
         >
           <a-input-password
             v-model:value="formState.password"
@@ -63,10 +54,7 @@
         <a-form-item
           label="确认密码"
           name="confirmPassword"
-          :rules="[
-            { required: true, message: '请再次输入密码' },
-            { validator: validateConfirmPasswordRule }
-          ]"
+          :rules="[{ validator: validateConfirmPasswordRule }]"
         >
           <a-input-password
             v-model:value="formState.confirmPassword"
