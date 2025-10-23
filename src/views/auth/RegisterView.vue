@@ -219,48 +219,49 @@ const handleSubmit = async () => {
 
 .register-container {
   background: white;
-  width: 400px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  padding: 40px;
+  width: 520px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  padding: 48px 60px;
 }
 
 .logo {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  margin: 0 auto 20px;
+  border-radius: 16px;
+  margin: 0 auto 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 40px;
   color: white;
 }
 
 h1 {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 600;
   color: #1a1a1a;
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 40px;
 }
 
 :deep(.ant-form-item) {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 :deep(.ant-form-item-label > label) {
-  font-size: 14px;
+  font-size: 15px;
   color: #333;
   font-weight: 500;
 }
 
 :deep(.ant-input),
 :deep(.ant-input-password) {
-  height: 40px;
+  height: 46px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
+  padding: 0 16px;
 }
 
 :deep(.ant-input:focus),
@@ -270,13 +271,13 @@ h1 {
 }
 
 .submit-btn {
-  height: 44px;
+  height: 48px;
   background: #667eea;
   border-color: #667eea;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .submit-btn:hover {
@@ -286,15 +287,16 @@ h1 {
 
 .footer-link {
   text-align: center;
-  margin-top: 24px;
-  font-size: 14px;
+  margin-top: 28px;
+  font-size: 15px;
   color: #666;
 }
 
 .footer-link a {
   color: #667eea;
   text-decoration: none;
-  margin-left: 4px;
+  margin-left: 6px;
+  font-weight: 500;
 }
 
 .footer-link a:hover {
