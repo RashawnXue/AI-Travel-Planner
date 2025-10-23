@@ -14,10 +14,7 @@
         <a-form-item
           label="邮箱"
           name="email"
-          :rules="[
-            { required: true, message: '请输入邮箱地址' },
-            { validator: validateEmailRule }
-          ]"
+          :rules="[{ validator: validateEmailRule }]"
         >
           <a-input
             v-model:value="formState.email"
