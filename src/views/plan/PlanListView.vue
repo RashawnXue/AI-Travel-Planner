@@ -67,7 +67,7 @@ import { usePlanStore } from '@/stores/plan'
 import AppHeader from '@/components/common/AppHeader.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import PlanList from '@/components/plan/PlanList.vue'
-import PlanDetailView from './PlanDetailView.vue'
+import PlanDetailView from '@/views/plan/PlanDetailView.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -101,8 +101,11 @@ onMounted(async () => {
     currentPlanId.value = planIdFromQuery
   } else if (planStore.planList.length > 0) {
     // 如果没有指定，默认选中第一个
-    currentPlanId.value = planStore.planList[0].id
-    router.replace({ path: '/', query: { planId: currentPlanId.value } })
+    const firstPlan = planStore.planList[0]
+    if (firstPlan) {
+      currentPlanId.value = firstPlan.id
+      router.replace({ path: '/', query: { planId: currentPlanId.value } })
+    }
   }
 
   // 移动端默认折叠侧边栏

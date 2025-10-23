@@ -140,7 +140,7 @@ import {
 } from 'ant-design-vue'
 import { usePlanStore } from '@/stores/plan'
 import { useExpenseStore } from '@/stores/expense'
-import type { ExpenseForm, ExpenseCategory } from '@/types/expense'
+import type { ExpenseForm } from '@/types/expense'
 import PlanOverview from '@/components/plan/PlanOverview.vue'
 import DailyPlan from '@/components/plan/DailyPlan.vue'
 import AccommodationTab from '@/components/plan/AccommodationTab.vue'
@@ -168,8 +168,8 @@ const expenseForm = ref<ExpenseForm>({
   category: '餐饮',
   amount: 0,
   description: '',
-  expense_date: new Date().toISOString().split('T')[0],
-  expense_time: new Date().toTimeString().split(' ')[0]
+  expense_date: new Date().toISOString().split('T')[0] || '',
+  expense_time: new Date().toTimeString().split(' ')[0] || ''
 })
 
 const loadPlanDetail = async () => {
@@ -250,8 +250,8 @@ const resetExpenseForm = () => {
     category: '餐饮',
     amount: 0,
     description: '',
-    expense_date: new Date().toISOString().split('T')[0],
-    expense_time: new Date().toTimeString().split(' ')[0]
+    expense_date: new Date().toISOString().split('T')[0] || '',
+    expense_time: new Date().toTimeString().split(' ')[0] || ''
   }
 }
 

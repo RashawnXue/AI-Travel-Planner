@@ -163,7 +163,7 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    const { data, error } = await register(formState)
+    const { error } = await register(formState)
 
     if (error) {
       message.error(error.message, 3)
@@ -176,8 +176,8 @@ const handleSubmit = async () => {
     setTimeout(() => {
       router.push('/login')
     }, 3000)
-  } catch (err: any) {
-    message.error(err.message || '注册失败，请重试', 3)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '注册失败，请重试', 3)
   } finally {
     loading.value = false
   }

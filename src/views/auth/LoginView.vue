@@ -116,8 +116,8 @@ const handleSubmit = async () => {
       // 跳转到首页
       router.push('/')
     }
-  } catch (err: any) {
-    message.error(err.message || '登录失败，请重试', 3)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '登录失败，请重试', 3)
   } finally {
     loading.value = false
   }
