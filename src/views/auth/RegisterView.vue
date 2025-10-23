@@ -226,9 +226,7 @@ h1 {
   font-weight: 500;
 }
 
-:deep(.ant-input),
-:deep(.ant-input-password),
-:deep(.ant-input-password .ant-input) {
+:deep(.ant-input) {
   height: 46px;
   border-radius: 8px;
   font-size: 15px;
@@ -236,14 +234,33 @@ h1 {
   border: 1px solid #d9d9d9;
 }
 
-:deep(.ant-input:hover),
-:deep(.ant-input-password:hover),
-:deep(.ant-input-password .ant-input:hover) {
+:deep(.ant-input-password) {
+  height: 46px;
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+}
+
+:deep(.ant-input-password .ant-input) {
+  height: 44px;
+  border: none;
+  font-size: 15px;
+  padding: 0 16px;
+}
+
+:deep(.ant-input:hover) {
   border-color: #667eea;
 }
 
-:deep(.ant-input:focus),
-:deep(.ant-input-password .ant-input:focus) {
+:deep(.ant-input-password:hover) {
+  border-color: #667eea;
+}
+
+:deep(.ant-input:focus) {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+:deep(.ant-input-password:focus-within) {
   border-color: #667eea;
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
 }
