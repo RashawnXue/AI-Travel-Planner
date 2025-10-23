@@ -20,7 +20,19 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/HomeView.vue'),
+      component: () => import('@/views/plan/PlanListView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/create',
+      name: 'create',
+      component: () => import('@/views/plan/CreatePlanView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/plan/:id',
+      name: 'plan-detail',
+      component: () => import('@/views/plan/PlanDetailView.vue'),
       meta: { requiresAuth: true }
     },
     {

@@ -14,23 +14,46 @@
 ```
 src/
 ├── api/                    # API 接口封装
-│   └── auth.ts            # 认证相关 API
+│   ├── auth.ts            # 认证相关 API
+│   ├── plan.ts            # 行程相关 API
+│   └── expense.ts         # 支出相关 API
 ├── assets/                 # 静态资源
+│   ├── base.css           # 基础样式
+│   └── main.css           # 主样式
 ├── components/             # 组件
+│   ├── common/            # 公共组件
+│   │   ├── AppHeader.vue         # 顶部导航栏
+│   │   └── EmptyState.vue        # 空状态组件
+│   └── plan/              # 行程相关组件
+│       ├── PlanList.vue          # 行程列表
+│       ├── PlanCard.vue          # 行程卡片
+│       ├── PlanOverview.vue      # 行程概览
+│       ├── DailyPlan.vue         # 每日行程
+│       ├── AccommodationTab.vue  # 住宿 Tab
+│       ├── TransportTab.vue      # 交通 Tab
+│       └── BudgetTab.vue         # 预算 Tab
 ├── router/                 # 路由配置
 │   └── index.ts
 ├── stores/                 # Pinia stores
-│   └── user.ts            # 用户状态管理
+│   ├── user.ts            # 用户状态
+│   ├── plan.ts            # 行程状态
+│   └── expense.ts         # 支出状态
 ├── types/                  # TypeScript 类型定义
-│   ├── user.ts
-│   └── api.ts
+│   ├── user.ts            # 用户类型
+│   ├── api.ts             # API 类型
+│   ├── plan.ts            # 行程类型
+│   └── expense.ts         # 支出类型
 ├── utils/                  # 工具函数
 │   ├── supabase.ts        # Supabase 客户端
-│   └── validate.ts        # 表单验证
+│   └── validate.ts        # 验证函数
 ├── views/                  # 页面组件
-│   └── auth/
-│       ├── LoginView.vue
-│       └── RegisterView.vue
+│   ├── auth/              # 认证页面
+│   │   ├── LoginView.vue
+│   │   └── RegisterView.vue
+│   └── plan/              # 行程页面
+│       ├── PlanListView.vue      # 行程列表页（首页）
+│       ├── CreatePlanView.vue    # 创建行程页
+│       └── PlanDetailView.vue    # 行程详情页
 ├── App.vue                 # 根组件
 └── main.ts                 # 入口文件
 ```
@@ -94,21 +117,46 @@ npm run lint
 
 ## 已完成功能
 
+### 用户管理
 - ✅ 用户注册
 - ✅ 用户登录
+- ✅ 用户登出
 - ✅ 登录状态管理
 - ✅ 路由守卫
 - ✅ 表单验证
 - ✅ Supabase 集成
 
-## 开发规划
+### 行程管理
+- ✅ 行程列表展示
+- ✅ 行程详情查看
+- ✅ 行程删除
+- ✅ 每日行程展示（含时间轴）
+- ✅ 住宿安排展示
+- ✅ 交通信息展示
+- ✅ 费用预算可视化
+
+### 支出管理
+- ✅ 支出记录列表
+- ✅ 添加支出记录
+- ✅ 删除支出记录
+- ✅ 支出分类统计
+
+### UI/UX
+- ✅ 响应式布局（PC端）
+- ✅ 侧边栏折叠
+- ✅ 空状态提示
+- ✅ Loading 状态
+- ✅ 错误处理
+
+## 待开发功能
 
 详见 `docs/PRD.md`
 
-- [ ] 智能行程规划
-- [ ] 语音输入
-- [ ] 费用预算管理
-- [ ] 地图导航
+- [ ] 智能行程规划（AI 生成）
+- [ ] 语音输入（语音识别）
+- [ ] 地图导航（高德地图集成）
+- [ ] 行程编辑
+- [ ] 行程分享
 
 ## 开发规范
 
