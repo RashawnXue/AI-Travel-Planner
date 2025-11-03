@@ -200,7 +200,11 @@ import {
   DatePicker as ADatePicker,
   Button as AButton
 } from 'ant-design-vue'
+import { supabase } from '@/utils/supabase'
 import AppHeader from '@/components/common/AppHeader.vue'
+import { invokeBailianApp, extractBailianText, parsePlanJsonFromText } from '@/api/ai'
+import { createPlanFromAI } from '@/api/plan'
+import type { AIResponse } from '@/types/plan'
 
 const router = useRouter()
 
@@ -296,19 +300,74 @@ const togglePreference = (preference: string) => {
 }
 
 // 生成行程
-const generatePlan = () => {
+const generatePlan = async () => {
   if (!canGenerate.value) return
   
   isGenerating.value = true
-  
-  // TODO: 调用 AI 接口生成行程
-  setTimeout(() => {
+  try {
+    // 1. 首先检查用户是否已登录
+    const { data: userSession, error: userError } = await supabase.auth.getSession()
+    console.log('Current user session:', userSession)
+    
+    if (userError || !userSession?.session?.user?.id) {
+      message.error('请先登录后再生成行程')
+      router.push('/auth/login')
+      return
+    }
+
+    const userPrompt = activeTab.value === 'voice' ? recognizedText.value : textInput.value
+
+    // 构建给 AI 的完整提示，包含补充表单信息
+    const promptParts: string[] = []
+    promptParts.push(userPrompt.trim())
+    if (formData.value.destination) promptParts.push(`目的地：${formData.value.destination}`)
+    if (formData.value.days) promptParts.push(`天数：${formData.value.days}`)
+    if (formData.value.budget) promptParts.push(`预算：${formData.value.budget}`)
+    if (formData.value.travelers) promptParts.push(`同行人数：${formData.value.travelers}`)
+    if (formData.value.preferences?.length) promptParts.push(`偏好：${formData.value.preferences.join('、')}`)
+    if (formData.value.startDate) promptParts.push(`出发日期：${formData.value.startDate}`)
+
+    const prompt = promptParts.join('\n')
+    console.log('Sending prompt to AI:', prompt) // debug log
+
+    // const res = await invokeBailianApp({ prompt })
+    // console.log('AI response:', res) // debug log
+    
+    // if (res.error || !res.data) {
+    //   throw new Error(res.error?.message || '调用 AI 接口失败')
+    // }
+
+    // // 从返回中提取文本并尝试解析为 JSON
+    // const raw = res.data
+    // const text = extractBailianText(raw) ?? (typeof raw === 'string' ? raw : JSON.stringify(raw))
+    
+    const text = `
+{\n  \"title\": \"上海亲子动漫主题3日游\",\n  \"destination\": \"上海\",\n  \"days\": 3,\n  \"budget\": 8000,\n  \"travelers\": 2,\n  \"preferences\": [\"亲子\", \"动漫\", \"文化\"],\n  \"start_date\": \"2025-11-04\",\n  \"summary\": \"这是一次专为亲子家庭打造的上海动漫文化探索之旅。从外滩的经典地标到科技馆的互动体验，再到多家高品质亲子餐厅与动漫主题空间，行程兼顾趣味性、教育性和舒适度，让孩子在玩乐中感受科技与文化的魅力。\",\n\n  \"daily_plans\": [\n    {\n      \"day\": 1,\n      \"title\": \"外滩初印象 + 动漫探秘\",\n      \"activities\": [\n        {\n          \"time\": \"09:30\",\n          \"title\": \"外滩晨游\",\n          \"location\": \"外滩\",\n          \"address\": \"黄浦区中山东一路\",\n          \"longitude\": 121.4903,\n          \"latitude\": 31.2362,\n          \"duration\": 90,\n          \"description\": \"漫步外滩，欣赏万国建筑群与浦东天际线，感受上海的历史与现代交融。\",\n          \"estimated_cost\": 0,\n          \"tips\": \"清晨人少适合拍照，注意孩子安全，避免靠近车流\",\n          \"photo\": \"http://store.is.autonavi.com/showpic/b9c402b7d34ea98654cc915e567761dd\"\n        },\n        {\n          \"time\": \"11:30\",\n          \"title\": \"午餐：Maggie&Rose亲子餐厅\",\n          \"location\": \"Maggie&Rose亲子餐厅(南丰城店)\",\n          \"address\": \"遵义路100号南丰城2层\",\n          \"longitude\": 121.4217,\n          \"latitude\": 31.2174,\n          \"duration\": 120,\n          \"description\": \"在温馨的亲子餐厅享用健康美味的儿童餐与成人料理，孩子可在游乐区玩耍。\",\n          \"estimated_cost\": 400,\n          \"tips\": \"建议提前预约靠窗座位，餐厅玩具较丰富\",\n          \"photo\": \"http://store.is.autonavi.com/showpic/3b7b4db3057686060e055a6dee745f91\"\n        },\n        {\n          \"time\": \"14:00\",\n          \"title\": \"秋叶原动漫中心探秘\",\n          \"location\": \"秋叶原\",\n          \"address\": \"南京东路340百联ZX创趣场F4层\",\n          \"longitude\": 121.4805,\n          \"latitude\": 31.2361,\n          \"duration\": 150,\n          \"description\": \"探访上海版秋叶原，体验动漫手办、周边商品与沉浸式二次元文化。\",\n          \"estimated_cost\": 300,\n          \"tips\": \"适合拍照打卡，可购买限量小礼品给孩子作为纪念\",\n          \"photo\": \"http://store.is.autonavi.com/showpic/4266f4f5e9fd19ea1994871f909c850b\"\n        },\n        {\n          \"time\": \"17:00\",\n          \"title\": \"樱动漫手办探店\",\n          \"location\": \"樱动漫手办\",\n          \"address\": \"百米香榭1层125号\",\n          \"longitude\": 121.4785,\n          \"latitude\": 31.2336,\n          \"duration\": 60,\n          \"description\": \"参观精品动漫手办店，欣赏高精度模型，了解动漫收藏文化。\",\n          \"estimated_cost\": 200,\n          \"tips\": \"店内禁止触摸展品，可咨询店主了解动漫制作背后的故事\",\n          \"photo\": \"https://aos-comment.amap.com/B0JBUZ7A5P/headerImg/1883d869e1e1190f19ee1e79594ad9f6_2048_2048_80.jpg\"\n        }\n      ]\n    },\n    {\n      \"day\": 2,\n      \"title\": \"科技启蒙 + 亲子时光\",\n      \"activities\": [\n        {\n          \"time\": \"10:00\",\n          \"title\": \"上海科技馆特展参观\",\n          \"location\": \"上海科技馆特展厅\",\n          \"address\": \"世纪大道2000号上海科技馆2层\",\n          \"longitude\": 121.5393,\n          \"latitude\": 31.2262,\n          \"duration\": 180,\n          \"description\": \"参观正在开放的特展厅，体验互动科技项目，激发孩子对科学的兴趣。\",\n          \"estimated_cost\": 200,\n          \"tips\": \"主馆装修中，请提前确认特展内容；建议携带水壶和小零食\",\n          \"photo\": \"http://store.is.autonavi.com/showpic/8671fa82afbaaab85ec4dbace971f735\"\n        },\n        {\n          \"time\": \"13:30\",\n          \"title\": \"午餐：lilliput粒粒堡亲子餐厅\",\n          \"location\": \"lilliput粒粒堡亲子餐厅(保利时光里店)\",\n          \"address\": \"瑞平路230号保利时光里F2层\",\n          \"longitude\": 121.4935,\n          \"latitude\": 31.2228,\n          \"duration\": 120,\n          \"description\": \"在宽敞明亮的亲子餐厅用餐，孩子可在独立游乐区自由活动。\",\n          \"estimated_cost\": 450,\n          \"tips\": \"餐厅提供婴儿椅和消毒湿巾，适合低龄儿童\",\n          \"photo\": \"http://store.is.autonavi.com/showpic/099529dfd90952495c52d98233ce9706\"\n        },\n        {\n          \"time\": \"16:00\",\n          \"title\": \"科技馆下沉广场休闲\",\n          \"location\": \"上海科技馆下沉式广场\",\n          \"address\": \"世纪大道2000号\",\n          \"longitude\": 121.5393,\n          \"latitude\": 31.2262,\n          \"duration\": 90,\n          \"description\": \"在科技馆外广场散步，观看喷泉与艺术装置，放松身心。\",\n          \"estimated_cost\": 0,\n          \"tips\": \"傍晚光线柔和，适合家庭合影\",\n          \"photo\": \"http://store.is.autonavi.com/showpic/e37f4924de51fd77825ee98bb5562e42\"\n        }\n      ]\n    },\n    {\n      \"day\": 3,\n      \"title\": \"动漫文化深度体验\",\n      \"activities\": [\n        {\n          \"time\": \"10:30\",\n          \"title\": \"天天玩X秋葉原日系动漫中心\",\n          \"location\": \"天天玩X秋葉原日系动漫中心\",\n          \"address\": \"华山路2088号汇银广场南楼7M层\",\n          \"longitude\": 121.4263,\n          \"latitude\": 31.2074,\n          \"duration\": 150,\n          \"description\": \"体验日系动漫主题空间，参与角色扮演、游戏互动与手工制作。\",\n          \"estimated_cost\": 350,\n          \"tips\": \"部分项目需额外收费，建议选择包含多个项目的套票\",\n          \"photo\": \"http://store.is.autonavi.com/showpic/fd69cb5598634778ffd8ac94fce7d6f2\"\n        },\n        {\n          \"time\": \"13:00\",\n          \"title\": \"午餐：twinkle耀童亲子餐厅\",\n          \"location\": \"twinkle耀童亲子餐厅(尚嘉店)\",\n          \"address\": \"仙霞路99号尚嘉中心L2层\",\n          \"longitude\": 121.3928,\n          \"latitude\": 31.1946,\n          \"duration\": 120,\n          \"description\": \"在高端亲子餐厅享用精致餐点，享受安静舒适的亲子时光。\",\n          \"estimated_cost\": 500,\n          \"tips\": \"餐厅环境优雅，适合记录成长瞬间，建议提前预约\",\n          \"photo\": \"http://store.is.autonavi.com/showpic/96793614e0131055174f333d816589f8\"\n        },\n        {\n          \"time\": \"15:30\",\n          \"title\": \"上海动漫博物馆参观\",\n          \"location\": \"上海动漫博物馆\",\n          \"address\": \"张江路69号\",\n          \"longitude\": 121.6488,\n          \"latitude\": 31.2087,\n          \"duration\": 120,\n          \"description\": \"了解中国动漫发展历程，观看经典动画展陈，参与互动体验项目。\",\n          \"estimated_cost\": 150,\n          \"tips\": \"博物馆设有儿童导览手册，可领取后边看边学\",\n          \"photo\": \"https://aos-comment.amap.com/B00156EC23/comment/50b35219acecf041bf30c572ea494b3f_2048_2048_80.jpg\"\n        }\n      ]\n    }\n  ],\n\n  \"accommodation\": [\n    {\n      \"day\": 1,\n      \"hotel_name\": \"上海陆家嘴上海中心亚朵酒店\",\n      \"address\": \"浦东大道580号\",\n      \"longitude\": 121.5176,\n      \"latitude\": 31.2351,\n      \"price_range\": \"¥600-900/晚\",\n      \"rating\": \"4.8星\",\n      \"reason\": \"地理位置优越，靠近科技馆与外滩，交通便利，房间安静舒适，适合家庭入住\",\n      \"photo\": \"http://store.is.autonavi.com/showpic/c46b8aa25ba531fd319a32db66b603a7\"\n    },\n    {\n      \"day\": 2,\n      \"hotel_name\": \"上海陆家嘴上海中心亚朵酒店\",\n      \"address\": \"浦东大道580号\",\n      \"longitude\": 121.5176,\n      \"latitude\": 31.2351,\n      \"price_range\": \"¥600-900/晚\",\n      \"rating\": \"4.8星\",\n      \"reason\": \"连续入住方便行李存放，周边餐饮选择多，步行可达地铁站\",\n      \"photo\": \"http://store.is.autonavi.com/showpic/c46b8aa25ba531fd319a32db66b603a7\"\n    },\n    {\n      \"day\": 3,\n      \"hotel_name\": \"上海陆家嘴上海中心亚朵酒店\",\n      \"address\": \"浦东大道580号\",\n      \"longitude\": 121.5176,\n      \"latitude\": 31.2351,\n      \"price_range\": \"¥600-900/晚\",\n      \"rating\": \"4.8星\",\n      \"reason\": \"便于最后一天退房前存放行李，继续轻松游玩\",\n      \"photo\": \"http://store.is.autonavi.com/showpic/c46b8aa25ba531fd319a32db66b603a7\"\n    }\n  ],\n\n  \"transportation\": {\n    \"overview\": \"上海市内交通便捷，建议使用地铁+打车结合方式。亲子出行推荐使用网约车（如滴滴）更舒适。主要景点间距离适中，单程交通时间控制在40分钟内。\",\n    \"details\": [\n      {\n        \"type\": \"地铁\",\n        \"route\": \"市内地铁出行（含换乘）\",\n        \"estimated_cost\": 100\n      },\n      {\n        \"type\": \"网约车\",\n        \"route\": \"每日短途接送及大件行李运输\",\n        \"estimated_cost\": 600\n      },\n      {\n        \"type\": \"停车费\",\n        \"route\": \"商场及景区临时停车\",\n        \"estimated_cost\": 150\n      }\n    ]\n  },\n\n  \"budget_breakdown\": {\n    \"transportation\": 850,\n    \"accommodation\": 2400,\n    \"food\": 2000,\n    \"activities\": 1500,\n    \"shopping\": 800,\n    \"other\": 450,\n    \"total\": 8000\n  }\n}
+`
+    console.log('Extracted text:', text) // debug log
+    
+    const aiObj = parsePlanJsonFromText<AIResponse>(text)
+    if (!aiObj) {
+      throw new Error('无法从 AI 返回中解析出有效的 JSON 行程数据')
+    }
+
+    console.log('Parsed AI response:', aiObj) // debug log
+
+    const createRes = await createPlanFromAI(aiObj)
+    if (createRes.error || !createRes.data) {
+      throw new Error(createRes.error?.message || '持久化行程失败')
+    }
+
+    message.success('行程生成并保存成功！')
+    // 生成成功后返回首页
+    router.push('/')
+  } catch (err) {
+    const e = err as Error
+    console.error('Generate plan error:', e)
+    message.error(e.message || '生成行程失败')
+  } finally {
     isGenerating.value = false
-    message.success('行程生成成功！')
-    // 跳转到行程详情页
-    // router.push(`/plan/${planId}`)
-    message.info('AI 生成功能即将开放，敬请期待')
-  }, 2000)
+  }
 }
 </script>
 

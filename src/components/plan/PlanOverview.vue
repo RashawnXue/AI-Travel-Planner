@@ -37,15 +37,15 @@
               <div class="info-card-label">总预算</div>
               <div class="info-card-value highlight">¥ {{ formatNumber(plan.budget) }}</div>
             </div>
-          </div>
+      </div>
 
           <div class="info-card">
             <div class="info-card-icon travelers">👥</div>
             <div class="info-card-content">
               <div class="info-card-label">同行人数</div>
               <div class="info-card-value">{{ plan.travelers }} 人</div>
-            </div>
-          </div>
+        </div>
+        </div>
 
           <div class="info-card full-width">
             <div class="info-card-icon preferences">🏷️</div>
@@ -60,9 +60,9 @@
                 >
                   {{ preference }}
                 </span>
-              </div>
-            </div>
-          </div>
+        </div>
+        </div>
+        </div>
         </div>
       </div>
     </div>
