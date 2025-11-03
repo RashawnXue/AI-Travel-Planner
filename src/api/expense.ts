@@ -33,11 +33,12 @@ export async function getExpenseList(planId: string): Promise<ApiResponse<Expens
       data: data as Expense[],
       error: null
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     return {
       data: null,
       error: {
-        message: err.message || '获取支出记录失败'
+        message: error.message || '获取支出记录失败'
       }
     }
   }
@@ -89,11 +90,12 @@ export async function addExpense(
       data: data as Expense,
       error: null
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     return {
       data: null,
       error: {
-        message: err.message || '添加支出记录失败'
+        message: error.message || '添加支出记录失败'
       }
     }
   }
@@ -124,11 +126,12 @@ export async function deleteExpense(expenseId: string): Promise<ApiResponse<null
       data: null,
       error: null
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     return {
       data: null,
       error: {
-        message: err.message || '删除支出记录失败'
+        message: error.message || '删除支出记录失败'
       }
     }
   }

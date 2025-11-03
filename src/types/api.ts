@@ -3,7 +3,7 @@
  */
 
 // API 响应基础类型
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T | null
   error: ApiError | null
 }

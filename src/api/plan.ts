@@ -38,11 +38,12 @@ export async function getPlanList(
       data: data as PlanListItem[],
       error: null
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     return {
       data: null,
       error: {
-        message: err.message || '获取行程列表失败'
+        message: error.message || '获取行程列表失败'
       }
     }
   }
@@ -74,11 +75,12 @@ export async function getPlanDetail(planId: string): Promise<ApiResponse<TravelP
       data: data as TravelPlan,
       error: null
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     return {
       data: null,
       error: {
-        message: err.message || '获取行程详情失败'
+        message: error.message || '获取行程详情失败'
       }
     }
   }
@@ -109,11 +111,12 @@ export async function deletePlan(planId: string): Promise<ApiResponse<null>> {
       data: null,
       error: null
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     return {
       data: null,
       error: {
-        message: err.message || '删除行程失败'
+        message: error.message || '删除行程失败'
       }
     }
   }

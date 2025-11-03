@@ -74,31 +74,6 @@ const handlePlanClick = (planId: string) => {
 const handleContextMenu = (planId: string, event: MouseEvent) => {
   event.preventDefault()
   
-  const items = [
-    {
-      label: '查看详情',
-      onClick: () => {
-        emit('selectPlan', planId)
-      }
-    },
-    {
-      label: '编辑行程',
-      onClick: () => {
-        message.info('编辑功能即将开放')
-      }
-    },
-    {
-      type: 'divider'
-    },
-    {
-      label: '删除行程',
-      danger: true,
-      onClick: () => {
-        handleDelete(planId)
-      }
-    }
-  ]
-  
   // 这里简化处理，直接弹出确认框
   // 在实际项目中可以使用更复杂的右键菜单组件
   showContextMenu(planId)

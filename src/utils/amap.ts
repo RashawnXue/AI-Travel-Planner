@@ -5,7 +5,7 @@
 // 声明高德地图全局类型
 declare global {
   interface Window {
-    AMap: any
+    AMap: typeof AMap
     _AMapSecurityConfig: {
       securityJsCode: string
     }
@@ -18,12 +18,12 @@ const AMAP_SECURITY_CODE = import.meta.env.VITE_AMAP_SECURITY_CODE || ''
 
 // 标记地图是否正在加载
 let isLoading = false
-let loadPromise: Promise<any> | null = null
+let loadPromise: Promise<typeof AMap> | null = null
 
 /**
  * 动态加载高德地图 JS API
  */
-function loadAMapScript(): Promise<any> {
+function loadAMapScript(): Promise<typeof AMap> {
   return new Promise((resolve, reject) => {
     // 如果没有配置 Key，使用演示 Key
     const key = AMAP_KEY || 'c3747ba494f6df86d0b501fc253ff5b9' // 演示 Key，请替换为你自己的
@@ -56,7 +56,7 @@ function loadAMapScript(): Promise<any> {
 /**
  * 等待高德地图加载完成
  */
-export function waitForAMap(): Promise<any> {
+export function waitForAMap(): Promise<typeof AMap> {
   return new Promise((resolve, reject) => {
     // 如果已经加载完成
     if (window.AMap) {
@@ -94,12 +94,8 @@ export function waitForAMap(): Promise<any> {
  */
 export async function createMap(
   container: string | HTMLElement,
-  options: {
-    center?: [number, number] // [经度, 纬度]
-    zoom?: number
-    [key: string]: any
-  } = {}
-) {
+  options: AMap.MapOptions = {}
+): Promise<AMap.Map> {
   const AMap = await waitForAMap()
 
   const defaultOptions = {
@@ -118,16 +114,10 @@ export async function createMap(
  * @param options 标记选项
  */
 export async function addMarker(
-  map: any,
+  map: AMap.Map,
   position: [number, number],
-  options: {
-    title?: string
-    content?: string
-    icon?: string
-    label?: any
-    [key: string]: any
-  } = {}
-) {
+  options: AMap.MarkerOptions = {}
+): Promise<AMap.Marker> {
   const AMap = await waitForAMap()
 
   const marker = new AMap.Marker({
@@ -146,15 +136,10 @@ export async function addMarker(
  * @param options 折线选项
  */
 export async function addPolyline(
-  map: any,
+  map: AMap.Map,
   path: Array<[number, number]>,
-  options: {
-    strokeColor?: string
-    strokeWeight?: number
-    strokeOpacity?: number
-    [key: string]: any
-  } = {}
-) {
+  options: AMap.PolylineOptions = {}
+): Promise<AMap.Polyline> {
   const AMap = await waitForAMap()
 
   const defaultOptions = {
@@ -181,10 +166,10 @@ export async function addPolyline(
  * @param content 内容
  */
 export async function addInfoWindow(
-  map: any,
+  map: AMap.Map,
   position: [number, number],
   content: string
-) {
+): Promise<AMap.InfoWindow> {
   const AMap = await waitForAMap()
 
   const infoWindow = new AMap.InfoWindow({
@@ -201,7 +186,7 @@ export async function addInfoWindow(
  * @param map 地图实例
  * @param points 点位数组 [[经度, 纬度], ...]
  */
-export function fitView(map: any, points: Array<[number, number]>) {
+export function fitView(map: AMap.Map, points: Array<[number, number]>): void {
   if (points.length === 0) return
 
   if (points.length === 1) {

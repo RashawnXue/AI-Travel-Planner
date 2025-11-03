@@ -104,10 +104,10 @@ const props = defineProps<Props>()
 
 const currentDay = ref(0)
 const mapContainer = ref<HTMLElement>()
-const mapInstance = ref<any>(null)
+const mapInstance = ref<AMap.Map | null>(null)
 const mapLoading = ref(true)
-const markers = ref<any[]>([])
-const polylines = ref<any[]>([])
+const markers = ref<AMap.Marker[]>([])
+const polylines = ref<AMap.Polyline[]>([])
 
 // 当前天数的行程
 const currentDayPlans = computed(() => {
@@ -287,13 +287,13 @@ const renderDayRoute = async () => {
             }
             
             // 移除可能存在的旧监听器
-            contentEl.removeEventListener('wheel', handleWheel as any)
+            contentEl.removeEventListener('wheel', handleWheel)
             // 添加新的监听器
-            contentEl.addEventListener('wheel', handleWheel as any, { passive: false })
+            contentEl.addEventListener('wheel', handleWheel, { passive: false })
             
             // 信息窗关闭时清理监听器
             infoWindow.on('close', () => {
-              contentEl.removeEventListener('wheel', handleWheel as any)
+              contentEl.removeEventListener('wheel', handleWheel)
             })
           }
         }, 100)
@@ -377,13 +377,13 @@ const renderDayRoute = async () => {
             }
             
             // 移除可能存在的旧监听器
-            contentEl.removeEventListener('wheel', handleWheel as any)
+            contentEl.removeEventListener('wheel', handleWheel)
             // 添加新的监听器
-            contentEl.addEventListener('wheel', handleWheel as any, { passive: false })
+            contentEl.addEventListener('wheel', handleWheel, { passive: false })
             
             // 信息窗关闭时清理监听器
             infoWindow.on('close', () => {
-              contentEl.removeEventListener('wheel', handleWheel as any)
+              contentEl.removeEventListener('wheel', handleWheel)
             })
           }
         }, 100)
