@@ -79,13 +79,15 @@ const formatCreatedTime = (dateStr: string) => {
 }
 
 .plan-card:hover {
-  background: #f5f5f5;
-  border-left: 3px solid #667eea;
+  background: rgba(30, 136, 229, 0.03);
+  border-left: 3px solid var(--color-primary);
+  box-shadow: 0 2px 8px rgba(30, 136, 229, 0.1);
 }
 
 .plan-card.active {
-  background: #e6f7ff;
-  border-left: 3px solid #667eea;
+  background: rgba(30, 136, 229, 0.06);
+  border-left: 3px solid var(--color-primary);
+  box-shadow: 0 2px 12px rgba(30, 136, 229, 0.15);
 }
 
 .plan-title {
@@ -114,7 +116,7 @@ const formatCreatedTime = (dateStr: string) => {
 
 .plan-budget {
   font-size: 14px;
-  color: #ff4d4f;
+  color: var(--color-accent);
   font-weight: 600;
 }
 

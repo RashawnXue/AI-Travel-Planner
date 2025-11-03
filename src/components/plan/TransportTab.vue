@@ -144,7 +144,7 @@ const getTypeClass = (type: string) => {
 
 .transport-cost {
   font-size: 16px;
-  color: #ff4d4f;
+  color: var(--color-accent);
   font-weight: 600;
 }
 
@@ -155,7 +155,7 @@ const getTypeClass = (type: string) => {
   border-radius: 8px;
   margin-top: 16px;
   font-size: 18px;
-  color: #ff4d4f;
+  color: var(--color-accent);
   font-weight: 600;
 }
 </style>

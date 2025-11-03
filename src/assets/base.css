@@ -1,5 +1,6 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* 旅游主题配色方案 - Travel Theme Color Palette */
 :root {
+  /* 基础色 - Base Colors */
   --vt-c-white: #ffffff;
   --vt-c-white-soft: #f8f8f8;
   --vt-c-white-mute: #f2f2f2;
@@ -8,30 +9,93 @@
   --vt-c-black-soft: #222222;
   --vt-c-black-mute: #282828;
 
-  --vt-c-indigo: #2c3e50;
+  /* 旅游主题色 - Travel Theme Colors */
+  /* 海洋蓝 - Ocean Blue (主色) */
+  --travel-ocean-blue: #1E88E5;
+  --travel-ocean-blue-light: #42A5F5;
+  --travel-ocean-blue-lighter: #90CAF9;
+  --travel-ocean-blue-dark: #1565C0;
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  /* 天空蓝 - Sky Blue */
+  --travel-sky-blue: #29B6F6;
+  --travel-sky-blue-light: #4FC3F7;
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
+  /* 日落橙 - Sunset Orange (强调色) */
+  --travel-sunset-orange: #FF6F3C;
+  --travel-sunset-orange-light: #FF8A65;
+  --travel-sunset-orange-dark: #F4511E;
+
+  /* 绿松石 - Turquoise (辅助色) */
+  --travel-turquoise: #26C6DA;
+  --travel-turquoise-light: #4DD0E1;
+  --travel-turquoise-lighter: #80DEEA;
+
+  /* 珊瑚粉 - Coral Pink */
+  --travel-coral: #FF7B9C;
+  --travel-coral-light: #FFB3C6;
+
+  /* 薄荷绿 - Mint Green */
+  --travel-mint: #4DB6AC;
+  --travel-mint-light: #80CBC4;
+
+  /* 金沙黄 - Sand Gold */
+  --travel-sand: #FFB74D;
+  --travel-sand-light: #FFCC80;
+
+  /* 渐变色 - Gradients */
+  --gradient-ocean: linear-gradient(135deg, #1E88E5 0%, #26C6DA 100%);
+  --gradient-sunset: linear-gradient(135deg, #FF6F3C 0%, #FFB74D 100%);
+  --gradient-tropical: linear-gradient(135deg, #26C6DA 0%, #4DB6AC 100%);
+  --gradient-sky: linear-gradient(135deg, #42A5F5 0%, #29B6F6 100%);
+  --gradient-adventure: linear-gradient(135deg, #1E88E5 0%, #FF6F3C 100%);
+  --gradient-paradise: linear-gradient(135deg, #26C6DA 0%, #FF7B9C 100%);
+
+  /* 分割线 - Dividers */
+  --vt-c-divider-light-1: rgba(30, 136, 229, 0.18);
+  --vt-c-divider-light-2: rgba(30, 136, 229, 0.08);
+  --vt-c-divider-dark-1: rgba(66, 165, 245, 0.35);
+  --vt-c-divider-dark-2: rgba(66, 165, 245, 0.25);
+
+  /* 文字色 - Text Colors */
+  --vt-c-text-light-1: #1a1a1a;
   --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
   --vt-c-text-dark-1: var(--vt-c-white);
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
 
-/* semantic color variables for this project */
+/* 语义化颜色变量 - Semantic Color Variables */
 :root {
+  /* 背景色 */
   --color-background: var(--vt-c-white);
   --color-background-soft: var(--vt-c-white-soft);
   --color-background-mute: var(--vt-c-white-mute);
 
+  /* 主题色 */
+  --color-primary: var(--travel-ocean-blue);
+  --color-primary-light: var(--travel-ocean-blue-light);
+  --color-primary-lighter: var(--travel-ocean-blue-lighter);
+  --color-primary-dark: var(--travel-ocean-blue-dark);
+
+  /* 强调色 */
+  --color-accent: var(--travel-sunset-orange);
+  --color-accent-light: var(--travel-sunset-orange-light);
+
+  /* 辅助色 */
+  --color-secondary: var(--travel-turquoise);
+  --color-secondary-light: var(--travel-turquoise-light);
+
+  /* 边框色 */
   --color-border: var(--vt-c-divider-light-2);
   --color-border-hover: var(--vt-c-divider-light-1);
 
+  /* 文字色 */
   --color-heading: var(--vt-c-text-light-1);
   --color-text: var(--vt-c-text-light-1);
+  --color-text-secondary: var(--vt-c-text-light-2);
+
+  /* 渐变 */
+  --gradient-main: var(--gradient-ocean);
+  --gradient-hero: var(--gradient-adventure);
 
   --section-gap: 160px;
 }

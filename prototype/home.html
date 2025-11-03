@@ -448,6 +448,198 @@
             gap: 24px;
         }
 
+        /* 地图区域 */
+        .map-container {
+            width: 100%;
+            height: 400px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e8e8e8;
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .map-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .map-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .map-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 地图路径标记 */
+        .map-route {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .route-line {
+            position: absolute;
+            background: #667eea;
+            opacity: 0.6;
+        }
+
+        .route-marker {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .route-marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 10;
+        }
+
+        .route-marker.start {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+
+        .route-marker.end {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+
+        .marker-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            white-space: nowrap;
+            font-size: 12px;
+            margin-bottom: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .route-marker:hover .marker-tooltip {
+            opacity: 1;
+        }
+
+        .marker-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: white;
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .map-control-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .map-control-btn:hover {
+            background: #f5f5f5;
+            border-color: #667eea;
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.start {
+            background: #52c41a;
+        }
+
+        .legend-dot.middle {
+            background: #667eea;
+        }
+
+        .legend-dot.end {
+            background: #ff4d4f;
+        }
+
         .day-list {
             width: 160px;
             border-right: 1px solid #e8e8e8;
@@ -964,6 +1156,27 @@
                 min-width: 120px;
                 margin-bottom: 0;
             }
+
+            .map-container {
+                height: 300px;
+            }
+
+            .map-legend {
+                font-size: 10px;
+                padding: 8px 12px;
+                gap: 12px;
+            }
+
+            .map-controls {
+                top: 8px;
+                right: 8px;
+            }
+
+            .map-control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -1097,6 +1310,77 @@
                 <section class="content-section">
                     <!-- 每日行程 Tab -->
                     <div class="tab-content active">
+                        <!-- 行程地图 -->
+                        <div class="map-container">
+                            <div class="map-placeholder">
+                                <div class="map-icon">🗺️</div>
+                                <div class="map-title">东京5日游行程地图</div>
+                                <div class="map-desc">鼠标悬停查看各景点详情</div>
+                                
+                                <!-- 地图路径标记 -->
+                                <div class="map-route">
+                                    <!-- 路径连接线 -->
+                                    <svg style="position: absolute; width: 100%; height: 100%; pointer-events: none;">
+                                        <defs>
+                                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                                <polygon points="0 0, 10 3, 0 6" fill="#667eea" opacity="0.6" />
+                                            </marker>
+                                        </defs>
+                                        <!-- 第1天路线 -->
+                                        <path d="M 150 120 Q 200 150 250 180" stroke="#667eea" stroke-width="3" fill="none" opacity="0.6" marker-end="url(#arrowhead)" />
+                                        <path d="M 250 180 Q 350 200 450 220" stroke="#667eea" stroke-width="3" fill="none" opacity="0.6" marker-end="url(#arrowhead)" />
+                                        <path d="M 450 220 Q 550 250 650 280" stroke="#667eea" stroke-width="3" fill="none" opacity="0.6" marker-end="url(#arrowhead)" />
+                                        <path d="M 650 280 Q 750 300 850 280" stroke="#667eea" stroke-width="3" fill="none" opacity="0.6" marker-end="url(#arrowhead)" />
+                                    </svg>
+                                    
+                                    <!-- 景点标记 -->
+                                    <div class="route-marker start" style="left: 15%; top: 30%;">
+                                        <span>1</span>
+                                        <div class="marker-tooltip">浅草寺 09:00</div>
+                                    </div>
+                                    <div class="route-marker" style="left: 25%; top: 45%;">
+                                        <span>2</span>
+                                        <div class="marker-tooltip">筑地市场 12:00</div>
+                                    </div>
+                                    <div class="route-marker" style="left: 45%; top: 55%;">
+                                        <span>3</span>
+                                        <div class="marker-tooltip">东京晴空塔 14:30</div>
+                                    </div>
+                                    <div class="route-marker" style="left: 65%; top: 70%;">
+                                        <span>4</span>
+                                        <div class="marker-tooltip">上野公园 18:00</div>
+                                    </div>
+                                    <div class="route-marker end" style="left: 85%; top: 70%;">
+                                        <span>🏨</span>
+                                        <div class="marker-tooltip">浅草雷门酒店</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 地图控制按钮 -->
+                            <div class="map-controls">
+                                <div class="map-control-btn" title="放大">+</div>
+                                <div class="map-control-btn" title="缩小">-</div>
+                                <div class="map-control-btn" title="全屏">⛶</div>
+                            </div>
+                            
+                            <!-- 地图图例 -->
+                            <div class="map-legend">
+                                <div class="legend-item">
+                                    <div class="legend-dot start"></div>
+                                    <span>起点</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-dot middle"></div>
+                                    <span>景点</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-dot end"></div>
+                                    <span>住宿</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="daily-plan-container">
                             <div class="day-list">
                                 <div class="day-item active">

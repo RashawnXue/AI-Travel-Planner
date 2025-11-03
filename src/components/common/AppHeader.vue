@@ -112,12 +112,13 @@ onUnmounted(() => {
 .logo {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-ocean);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
+  box-shadow: 0 2px 8px rgba(30, 136, 229, 0.3);
 }
 
 .header-title {
@@ -142,7 +143,8 @@ onUnmounted(() => {
 
 .nav-link:hover,
 .nav-link.active {
-  color: #667eea;
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 .header-right {
@@ -155,7 +157,7 @@ onUnmounted(() => {
 .user-avatar {
   width: 32px;
   height: 32px;
-  background: #667eea;
+  background: var(--gradient-ocean);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -164,6 +166,12 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(30, 136, 229, 0.4);
 }
 
 .user-name {

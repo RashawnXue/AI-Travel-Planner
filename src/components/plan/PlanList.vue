@@ -168,11 +168,13 @@ const handleScroll = async (e: Event) => {
   background: white;
   border-right: 1px solid #e8e8e8;
   padding: 24px;
-  overflow-y: auto;
+  overflow: hidden;
   height: calc(100vh - 64px);
   position: fixed;
   left: 0;
   transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar.collapsed {
@@ -206,7 +208,7 @@ const handleScroll = async (e: Event) => {
 .create-btn {
   width: 100%;
   height: 40px;
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -237,8 +239,8 @@ const handleScroll = async (e: Event) => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
+  flex: 1;
+  overflow: hidden;
 }
 
 .loading-more {

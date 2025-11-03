@@ -27,7 +27,10 @@
     <section class="content-section">
       <!-- 每日行程 Tab -->
       <div v-show="currentTab === 0" class="tab-content">
-        <DailyPlan :daily-plans="plan.ai_response.daily_plans" />
+        <DailyPlan 
+          :daily-plans="plan.ai_response.daily_plans" 
+          :accommodation="plan.ai_response.accommodation"
+        />
       </div>
 
       <!-- 住宿安排 Tab -->

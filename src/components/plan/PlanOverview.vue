@@ -96,7 +96,7 @@ const formatNumber = (num: number) => {
   position: relative;
   padding: 48px 24px;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-adventure);
   min-height: 420px;
 }
 
@@ -121,7 +121,7 @@ const formatNumber = (num: number) => {
 .orb-1 {
   width: 400px;
   height: 400px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: var(--gradient-sunset);
   top: -100px;
   left: -100px;
   animation-delay: 0s;
@@ -130,7 +130,7 @@ const formatNumber = (num: number) => {
 .orb-2 {
   width: 350px;
   height: 350px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: var(--gradient-tropical);
   bottom: -100px;
   right: -100px;
   animation-delay: 5s;
@@ -139,7 +139,7 @@ const formatNumber = (num: number) => {
 .orb-3 {
   width: 300px;
   height: 300px;
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: var(--gradient-paradise);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -194,13 +194,13 @@ const formatNumber = (num: number) => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-ocean);
   color: white;
   padding: 10px 20px;
   border-radius: 50px;
   font-weight: 600;
   font-size: 15px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(30, 136, 229, 0.4);
   animation: slideInLeft 0.6s ease;
 }
 
@@ -216,8 +216,8 @@ const formatNumber = (num: number) => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  background: rgba(30, 136, 229, 0.1);
+  color: var(--color-primary);
   padding: 10px 20px;
   border-radius: 50px;
   font-weight: 500;
@@ -254,7 +254,7 @@ const formatNumber = (num: number) => {
 .detail-title {
   font-size: 36px;
   font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-ocean);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -329,8 +329,8 @@ const formatNumber = (num: number) => {
 
 .info-card:hover {
   transform: translateY(-4px);
-  border-color: #667eea;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 24px rgba(30, 136, 229, 0.2);
 }
 
 .info-card.full-width {
@@ -349,23 +349,23 @@ const formatNumber = (num: number) => {
 }
 
 .info-card-icon.duration {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+  background: var(--gradient-sky);
+  box-shadow: 0 4px 15px rgba(66, 165, 245, 0.4);
 }
 
 .info-card-icon.budget {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  box-shadow: 0 4px 15px rgba(250, 112, 154, 0.4);
+  background: var(--gradient-sunset);
+  box-shadow: 0 4px 15px rgba(255, 111, 60, 0.4);
 }
 
 .info-card-icon.travelers {
-  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-  box-shadow: 0 4px 15px rgba(48, 207, 208, 0.4);
+  background: var(--gradient-tropical);
+  box-shadow: 0 4px 15px rgba(38, 198, 218, 0.4);
 }
 
 .info-card-icon.preferences {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-  box-shadow: 0 4px 15px rgba(168, 237, 234, 0.4);
+  background: var(--gradient-paradise);
+  box-shadow: 0 4px 15px rgba(255, 123, 156, 0.4);
 }
 
 .info-card-content {
@@ -389,7 +389,7 @@ const formatNumber = (num: number) => {
 }
 
 .info-card-value.highlight {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  background: var(--gradient-sunset);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -406,12 +406,12 @@ const formatNumber = (num: number) => {
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-ocean);
   color: white;
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);
   transition: all 0.3s ease;
   animation: tagFadeIn 0.5s ease both;
 }
@@ -429,7 +429,7 @@ const formatNumber = (num: number) => {
 
 .preference-tag:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(30, 136, 229, 0.4);
 }
 
 @media (max-width: 768px) {

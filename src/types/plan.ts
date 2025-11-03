@@ -8,10 +8,13 @@ export interface Activity {
   title: string
   location: string
   address: string
+  longitude?: number // 经度（可选）
+  latitude?: number // 纬度（可选）
   duration: number // 分钟
   description: string
   estimated_cost: number
   tips?: string
+  photo?: string // 照片URL（可选）
 }
 
 // 每日行程
@@ -26,9 +29,12 @@ export interface Accommodation {
   day: number
   hotel_name: string
   address: string
+  longitude?: number // 经度（可选）
+  latitude?: number // 纬度（可选）
   price_range: string
   rating: string
   reason: string
+  photo?: string // 照片URL（可选）
 }
 
 // 交通详情

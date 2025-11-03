@@ -12,7 +12,7 @@
       </div>
       <div class="budget-summary">
         <div>总预算: ¥{{ formatNumber(totalBudget) }}</div>
-        <div :style="{ color: remainingBudget < 0 ? '#ff4d4f' : '#52c41a' }">
+        <div :style="{ color: remainingBudget < 0 ? 'var(--color-accent)' : '#52c41a' }">
           {{ remainingBudget >= 0 ? '剩余预算' : '超出预算' }}: 
           ¥{{ formatNumber(Math.abs(remainingBudget)) }}
         </div>
@@ -149,12 +149,12 @@ const remainingBudget = computed(() => {
 
 const chartGradient = computed(() => {
   const percent = usagePercent.value
-  let color = '#1890ff'
+  let color = '#1E88E5'
   
   if (percent >= 100) {
-    color = '#ff4d4f'
+    color = '#FF6F3C'
   } else if (percent >= 80) {
-    color = '#fa8c16'
+    color = '#FFB74D'
   }
   
   return `conic-gradient(${color} 0% ${percent}%, #e8e8e8 ${percent}% 100%)`
@@ -287,7 +287,7 @@ const getCategoryClass = (category: ExpenseCategory) => {
 .add-expense-btn {
   width: 100%;
   height: 40px;
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -369,12 +369,12 @@ const getCategoryClass = (category: ExpenseCategory) => {
 }
 
 .expense-amount {
-  color: #ff4d4f;
+  color: var(--color-accent);
   font-weight: 600;
 }
 
 .delete-btn {
-  color: #ff4d4f;
+  color: var(--color-accent);
   cursor: pointer;
   border: none;
   background: none;

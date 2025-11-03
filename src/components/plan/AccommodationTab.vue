@@ -31,16 +31,27 @@ interface Props {
 defineProps<Props>()
 
 const handleViewMap = (hotel: Accommodation) => {
-  const address = encodeURIComponent(hotel.address)
   const name = encodeURIComponent(hotel.hotel_name)
   
   // 检测是否为移动设备
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
   
   if (isMobile) {
-    window.open(`https://uri.amap.com/marker?address=${address}&name=${name}`)
+    // 如果有经纬度，使用经纬度显示位置（更精确）
+    if (hotel.longitude && hotel.latitude) {
+      window.open(`https://uri.amap.com/marker?position=${hotel.longitude},${hotel.latitude}&name=${name}&src=mypage&coordinate=gaode&callnative=0`)
+    } else {
+      // 没有经纬度则使用地址
+      const address = encodeURIComponent(hotel.address)
+      window.open(`https://uri.amap.com/marker?address=${address}&name=${name}`)
+    }
   } else {
-    message.info('请在移动设备上使用地图功能，或手动搜索地址：' + hotel.address)
+    // PC端显示提示
+    if (hotel.longitude && hotel.latitude) {
+      message.info(`坐标: ${hotel.latitude}, ${hotel.longitude} - 建议在移动设备上使用地图功能`)
+    } else {
+      message.info('请在移动设备上使用地图功能，或手动搜索地址：' + hotel.address)
+    }
   }
 }
 </script>
@@ -84,8 +95,8 @@ const handleViewMap = (hotel: Accommodation) => {
 .nav-btn {
   padding: 4px 12px;
   background: white;
-  color: #667eea;
-  border: 1px solid #667eea;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
   border-radius: 4px;
   font-size: 12px;
   cursor: pointer;
@@ -94,7 +105,7 @@ const handleViewMap = (hotel: Accommodation) => {
 }
 
 .nav-btn:hover {
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
 }
 
@@ -106,7 +117,7 @@ const handleViewMap = (hotel: Accommodation) => {
 
 .hotel-price {
   font-size: 16px;
-  color: #ff4d4f;
+  color: var(--color-accent);
   font-weight: 600;
 }
 
