@@ -302,16 +302,18 @@ const generatePlan = () => {
 }
 
 .main-container {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 0 24px;
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .page-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 32px;
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 32px 32px 48px;
 }
 
 .page-title {
