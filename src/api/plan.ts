@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '@/utils/supabase'
-import type { TravelPlan, PlanListItem } from '@/types/plan'
+import type { TravelPlan, PlanListItem, AIResponse } from '@/types/plan'
 import type { ApiResponse } from '@/types/api'
 
 /**
@@ -119,6 +119,53 @@ export async function deletePlan(planId: string): Promise<ApiResponse<null>> {
         message: error.message || '删除行程失败'
       }
     }
+  }
+}
+
+/**
+ * 基于 AI 解析结果创建行程
+ * 自动从当前登录用户中获取 user_id
+ */
+export async function createPlanFromAI(ai: AIResponse): Promise<ApiResponse<{ id: string }>> {
+  try {
+    const { data: userRes, error: userErr } = await supabase.auth.getUser()
+    if (userErr || !userRes?.user?.id) {
+      return {
+        data: null,
+        error: { message: '未登录或无法获取用户信息' }
+      }
+    }
+
+    const payload = {
+      user_id: userRes.user.id,
+      title: ai.title,
+      destination: ai.destination,
+      days: ai.days,
+      budget: ai.budget,
+      travelers: ai.travelers,
+      preferences: ai.preferences,
+      start_date: ai.start_date,
+      summary: ai.summary,
+      ai_response: ai
+    }
+
+    const { data, error } = await supabase
+      .from('travel_plans')
+      .insert(payload)
+      .select('id')
+      .single()
+
+    if (error) {
+      return {
+        data: null,
+        error: { message: error.message, code: error.code }
+      }
+    }
+
+    return { data: { id: data.id as string }, error: null }
+  } catch (err) {
+    const error = err as Error
+    return { data: null, error: { message: error.message || '创建行程失败' } }
   }
 }
 

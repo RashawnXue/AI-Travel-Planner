@@ -13,6 +13,27 @@ export interface BailianCompletionOptions {
   debug?: Record<string, unknown>
 }
 
+// 从百炼返回中提取 output.text
+export function extractBailianText(raw: unknown): string | null {
+  try {
+    if (!raw) return null
+    const obj = typeof raw === 'string' ? JSON.parse(raw) : (raw as any)
+    const text = obj?.output?.text
+    return typeof text === 'string' ? text : null
+  } catch {
+    return null
+  }
+}
+
+// 尝试将 text 解析为 JSON 对象
+export function parsePlanJsonFromText<T = unknown>(text: string): T | null {
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    return null
+  }
+}
+
 /**
  * 调用百炼 DashScope App 的 completion 能力
  * 对应 curl:
