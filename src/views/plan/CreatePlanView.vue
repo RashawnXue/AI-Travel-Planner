@@ -2,10 +2,25 @@
   <div class="create-plan-view">
     <AppHeader />
     
+    <!-- 装饰背景元素 -->
+    <div class="decor-orb orb-1"></div>
+    <div class="decor-orb orb-2"></div>
+    <div class="decor-orb orb-3"></div>
+
     <div class="main-container">
       <div class="page-card">
-        <h1 class="page-title">创建新行程</h1>
-        <p class="page-subtitle">告诉 AI 你的旅行需求，让我们为你规划完美行程</p>
+        <!-- 顶部 Hero 信息区 -->
+        <div class="page-hero">
+          <div class="hero-badge">✨ 智能生成 · 分钟级出片</div>
+          <h1 class="page-title">创建新行程</h1>
+          <p class="page-subtitle">告诉 AI 你的旅行需求，让我们为你规划完美行程</p>
+          <div class="feature-list">
+            <span class="feature-chip">🎤 语音输入</span>
+            <span class="feature-chip">🧭 智能路线</span>
+            <span class="feature-chip">💰 预算均衡</span>
+            <span class="feature-chip">📅 日程细化</span>
+          </div>
+        </div>
 
         <!-- Tab 切换 -->
         <div class="tab-container">
@@ -14,14 +29,16 @@
             :class="{ active: activeTab === 'voice' }"
             @click="activeTab = 'voice'"
           >
-            语音输入
+            <span class="tab-icon">🎤</span>
+            <span>语音输入</span>
           </div>
           <div 
             class="tab-item" 
             :class="{ active: activeTab === 'text' }"
             @click="activeTab = 'text'"
           >
-            文字输入
+            <span class="tab-icon">⌨️</span>
+            <span>文字输入</span>
           </div>
         </div>
 
@@ -150,7 +167,7 @@
           </div>
         </div>
 
-        <!-- 生成按钮 -->
+        <!-- 生成按钮（底部粘性操作区） -->
         <div class="generate-section">
           <a-button 
             type="primary" 
@@ -165,6 +182,7 @@
             </template>
             生成行程
           </a-button>
+          <div class="generate-hint">生成后可在详情页微调行程并一键导航</div>
         </div>
       </div>
     </div>
@@ -301,6 +319,32 @@ const generatePlan = () => {
   padding-top: 64px;
 }
 
+/* 装饰渐变球背景 */
+.create-plan-view {
+  position: relative;
+  overflow: hidden;
+}
+
+.decor-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  z-index: 0;
+  pointer-events: none;
+  animation: float-orb 22s ease-in-out infinite;
+}
+
+.orb-1 { width: 420px; height: 420px; background: var(--gradient-sunset); top: -120px; left: -120px; animation-delay: 0s; }
+.orb-2 { width: 360px; height: 360px; background: var(--gradient-tropical); bottom: -140px; right: -140px; animation-delay: 6s; }
+.orb-3 { width: 300px; height: 300px; background: var(--gradient-paradise); top: 40%; left: 60%; animation-delay: 12s; }
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(24px, -20px) scale(1.08); }
+  66% { transform: translate(-18px, 16px) scale(0.95); }
+}
+
 /* 覆盖全局 #app 在本页面的布局，确保卡片覆盖全宽 */
 :global(#app) {
   max-width: none;
@@ -331,6 +375,26 @@ const generatePlan = () => {
   border-radius: 0;
   box-shadow: none;
   padding: 32px 32px 48px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero 信息区 */
+.page-hero {
+  margin-bottom: 16px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(30, 136, 229, 0.08);
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(30, 136, 229, 0.12);
 }
 
 .page-title {
@@ -344,6 +408,24 @@ const generatePlan = () => {
   font-size: 14px;
   color: #666;
   margin-bottom: 32px;
+}
+
+.feature-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.feature-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #555;
 }
 
 /* Tab 切换 */
@@ -361,6 +443,9 @@ const generatePlan = () => {
   margin-bottom: -2px;
   transition: all 0.3s;
   font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .tab-item.active {
@@ -603,13 +688,19 @@ const generatePlan = () => {
 
 /* 生成按钮 */
 .generate-section {
-  margin-top: 32px;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 60%);
+  padding: 24px 0 8px;
+  margin-top: 40px;
   text-align: center;
 }
 
 .generate-btn {
   height: 48px;
-  padding: 0 48px;
+  padding: 0 56px;
   background: var(--gradient-ocean);
   border: none;
   border-radius: 24px;
@@ -617,6 +708,12 @@ const generatePlan = () => {
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);
   transition: all 0.3s;
+}
+
+.generate-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #999;
 }
 
 .generate-btn:hover:not(:disabled) {
