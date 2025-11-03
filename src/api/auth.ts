@@ -53,11 +53,11 @@ export const register = async (
       },
       error: null
     }
-  } catch (err: any) {
+  } catch (err) {
     return {
       data: null,
       error: {
-        message: err.message || '网络错误，请稍后重试'
+        message: err instanceof Error ? err.message : '网络错误，请稍后重试'
       }
     }
   }
@@ -115,11 +115,11 @@ export const login = async (form: LoginForm): Promise<ApiResponse<User>> => {
       },
       error: null
     }
-  } catch (err: any) {
+  } catch (err) {
     return {
       data: null,
       error: {
-        message: err.message || '网络错误，请稍后重试'
+        message: err instanceof Error ? err.message : '网络错误，请稍后重试'
       }
     }
   }
@@ -145,11 +145,11 @@ export const logout = async (): Promise<ApiResponse<null>> => {
       data: null,
       error: null
     }
-  } catch (err: any) {
+  } catch (err) {
     return {
       data: null,
       error: {
-        message: err.message || '网络错误，请稍后重试'
+        message: err instanceof Error ? err.message : '网络错误，请稍后重试'
       }
     }
   }
@@ -184,11 +184,11 @@ export const getSession = async () => {
       },
       error: null
     }
-  } catch (err: any) {
+  } catch (err) {
     return {
       data: null,
       error: {
-        message: err.message || '获取会话失败'
+        message: err instanceof Error ? err.message : '获取会话失败'
       }
     }
   }

@@ -116,8 +116,8 @@ const handleSubmit = async () => {
       // 跳转到首页
       router.push('/')
     }
-  } catch (err: any) {
-    message.error(err.message || '登录失败，请重试', 3)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '登录失败，请重试', 3)
   } finally {
     loading.value = false
   }
@@ -134,7 +134,7 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-adventure);
   overflow-y: auto;
 }
 
@@ -149,7 +149,7 @@ const handleSubmit = async () => {
 .logo {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-ocean);
   border-radius: 16px;
   margin: 0 auto 24px;
   display: flex;
@@ -157,6 +157,7 @@ const handleSubmit = async () => {
   justify-content: center;
   font-size: 40px;
   color: white;
+  box-shadow: 0 4px 20px rgba(30, 136, 229, 0.3);
 }
 
 h1 {
@@ -187,12 +188,12 @@ h1 {
 }
 
 :deep(.ant-input:not(.ant-input-affix-wrapper .ant-input):hover) {
-  border-color: #667eea !important;
+  border-color: var(--color-primary) !important;
 }
 
 :deep(.ant-input:not(.ant-input-affix-wrapper .ant-input):focus) {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.1) !important;
 }
 
 /* 密码输入框容器样式 */
@@ -204,12 +205,12 @@ h1 {
 }
 
 :deep(.ant-input-affix-wrapper:hover) {
-  border-color: #667eea !important;
+  border-color: var(--color-primary) !important;
 }
 
 :deep(.ant-input-affix-wrapper-focused) {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.1) !important;
 }
 
 /* 密码输入框内部 input，移除边框避免双层 */
@@ -226,8 +227,8 @@ h1 {
 
 .submit-btn {
   height: 48px;
-  background: #667eea;
-  border-color: #667eea;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   border-radius: 8px;
   font-size: 17px;
   font-weight: 500;
@@ -235,8 +236,8 @@ h1 {
 }
 
 .submit-btn:hover {
-  background: #5568d3;
-  border-color: #5568d3;
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
 }
 
 .footer-link {
@@ -247,7 +248,7 @@ h1 {
 }
 
 .footer-link a {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
   margin-left: 6px;
   font-weight: 500;

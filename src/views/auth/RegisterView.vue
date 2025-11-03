@@ -100,7 +100,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { EyeTwoTone, EyeInvisibleOutlined } from '@ant-design/icons-vue'
-import { register } from '@/api/auth'
+import { register, logout } from '@/api/auth'
 import {
   validateUsername,
   validateEmail,
@@ -163,21 +163,25 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    const { data, error } = await register(formState)
+    const { error } = await register(formState)
 
     if (error) {
       message.error(error.message, 3)
       return
     }
 
-    message.success('注册成功，请查收邮箱验证邮件', 3)
+    // 注册成功后，Supabase 会自动创建会话，需要立即登出
+    // 这样用户才能正常跳转到登录页
+    await logout()
+
+    message.success('注册成功，请查收邮箱验证邮件后登录', 3)
 
     // 3 秒后跳转到登录页
     setTimeout(() => {
       router.push('/login')
     }, 3000)
-  } catch (err: any) {
-    message.error(err.message || '注册失败，请重试', 3)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '注册失败，请重试', 3)
   } finally {
     loading.value = false
   }
@@ -194,7 +198,7 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-adventure);
   overflow-y: auto;
 }
 
@@ -209,7 +213,7 @@ const handleSubmit = async () => {
 .logo {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-ocean);
   border-radius: 16px;
   margin: 0 auto 24px;
   display: flex;
@@ -217,6 +221,7 @@ const handleSubmit = async () => {
   justify-content: center;
   font-size: 40px;
   color: white;
+  box-shadow: 0 4px 20px rgba(30, 136, 229, 0.3);
 }
 
 h1 {
@@ -247,12 +252,12 @@ h1 {
 }
 
 :deep(.ant-input:not(.ant-input-affix-wrapper .ant-input):hover) {
-  border-color: #667eea !important;
+  border-color: var(--color-primary) !important;
 }
 
 :deep(.ant-input:not(.ant-input-affix-wrapper .ant-input):focus) {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.1) !important;
 }
 
 /* 密码输入框容器样式 */
@@ -264,12 +269,12 @@ h1 {
 }
 
 :deep(.ant-input-affix-wrapper:hover) {
-  border-color: #667eea !important;
+  border-color: var(--color-primary) !important;
 }
 
 :deep(.ant-input-affix-wrapper-focused) {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.1) !important;
 }
 
 /* 密码输入框内部 input，移除边框避免双层 */
@@ -286,8 +291,8 @@ h1 {
 
 .submit-btn {
   height: 48px;
-  background: #667eea;
-  border-color: #667eea;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   border-radius: 8px;
   font-size: 17px;
   font-weight: 500;
@@ -295,8 +300,8 @@ h1 {
 }
 
 .submit-btn:hover {
-  background: #5568d3;
-  border-color: #5568d3;
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
 }
 
 .footer-link {
@@ -307,7 +312,7 @@ h1 {
 }
 
 .footer-link a {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
   margin-left: 6px;
   font-weight: 500;
