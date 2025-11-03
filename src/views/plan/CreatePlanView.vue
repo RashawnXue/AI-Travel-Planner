@@ -301,11 +301,28 @@ const generatePlan = () => {
   padding-top: 64px;
 }
 
-.main-container {
+/* 覆盖全局 #app 在本页面的布局，确保卡片覆盖全宽 */
+:global(#app) {
   max-width: none;
-  width: 100%;
   margin: 0;
   padding: 0;
+}
+
+@media (min-width: 1024px) {
+  :global(body) {
+    display: block;
+  }
+  :global(#app) {
+    display: block;
+    grid-template-columns: none;
+    padding: 0;
+  }
+}
+
+.main-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 24px;
 }
 
 .page-card {
