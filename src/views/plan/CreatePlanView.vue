@@ -322,7 +322,8 @@ const generatePlan = () => {
 /* 装饰渐变球背景 */
 .create-plan-view {
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .decor-orb {
