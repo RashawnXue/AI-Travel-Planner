@@ -5,17 +5,26 @@
       :key="hotel.day"
       class="accommodation-card"
     >
-      <div class="accommodation-day">第 {{ hotel.day }} 天住宿</div>
-      <div class="hotel-name">{{ hotel.hotel_name }}</div>
-      <div class="hotel-address">
-        📍 {{ hotel.address }}
-        <button class="nav-btn" @click="handleViewMap(hotel)">查看地图</button>
+      <div class="hotel-info">
+        <div class="accommodation-day">第 {{ hotel.day }} 天住宿</div>
+        <div class="hotel-name">{{ hotel.hotel_name }}</div>
+        <div class="hotel-address">
+          📍 {{ hotel.address }}
+          <button class="nav-btn" @click="handleViewMap(hotel)">查看地图</button>
+        </div>
+        <div class="hotel-meta">
+          <div class="hotel-price">{{ hotel.price_range }}</div>
+          <div class="hotel-rating">⭐ {{ hotel.rating }}</div>
+        </div>
+        <div class="hotel-reason">{{ hotel.reason }}</div>
       </div>
-      <div class="hotel-meta">
-        <div class="hotel-price">{{ hotel.price_range }}</div>
-        <div class="hotel-rating">⭐ {{ hotel.rating }}</div>
+      <div v-if="hotel.photo" class="hotel-photo-wrapper">
+        <img
+          :src="hotel.photo"
+          :alt="hotel.hotel_name"
+          class="hotel-photo"
+        />
       </div>
-      <div class="hotel-reason">{{ hotel.reason }}</div>
     </div>
   </div>
 </template>
@@ -67,6 +76,36 @@ const handleViewMap = (hotel: Accommodation) => {
   border: 1px solid #e8e8e8;
   border-radius: 8px;
   padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.hotel-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hotel-photo-wrapper {
+  flex-shrink: 0;
+  width: 280px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hotel-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+
+.hotel-photo:hover {
+  transform: scale(1.05);
 }
 
 .accommodation-day {
