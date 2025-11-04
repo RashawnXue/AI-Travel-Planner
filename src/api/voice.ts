@@ -5,8 +5,6 @@
  * - 回传转写结果与错误
  */
 
-import { Base64 } from 'js-base64'
-
 export type IflyConfig = {
   appId: string
   accessKeyId: string
@@ -57,10 +55,10 @@ async function hmacSha1Base64(secret: string, message: string): Promise<string> 
   )
   const signature = await crypto.subtle.sign('HMAC', key, enc.encode(message))
   const uint8 = new Uint8Array(signature)
-  // 使用 Base64 编码
+  // 使用浏览器内置 btoa 进行 Base64 编码
   let binary = ''
   for (let i = 0; i < uint8.byteLength; i++) binary += String.fromCharCode(uint8[i])
-  return Base64.btoa(binary)
+  return btoa(binary)
 }
 
 export function createIflyAsrClient(cfg: IflyConfig, params: IflyParams = {}): IflyClient {
