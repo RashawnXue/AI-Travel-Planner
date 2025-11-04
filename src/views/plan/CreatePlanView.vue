@@ -438,8 +438,9 @@ async function startRecording() {
     }
   })
   asrClient.onError((err) => {
-    console.error('[ASR] websocket error:', err)
-    message.error('语音识别连接异常，请检查网络或密钥配置')
+    console.error('[ASR] websocket error/close:', err)
+    const detail = err?.reason || (err?.code ? `ws close code ${err.code}` : '')
+    message.error(`语音识别连接异常${detail ? `：${detail}` : ''}`)
   })
 
   try {

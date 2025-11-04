@@ -44,6 +44,22 @@ function encodeQuery(params: Record<string, string | number | undefined>): strin
     .join('&')
 }
 
+function formatUtcOffsetString(date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const year = date.getFullYear()
+  const month = pad(date.getMonth() + 1)
+  const day = pad(date.getDate())
+  const hour = pad(date.getHours())
+  const min = pad(date.getMinutes())
+  const sec = pad(date.getSeconds())
+  const tz = -date.getTimezoneOffset() // minutes east of UTC
+  const sign = tz >= 0 ? '+' : '-'
+  const tzAbs = Math.abs(tz)
+  const tzHH = pad(Math.floor(tzAbs / 60))
+  const tzMM = pad(tzAbs % 60)
+  return `${year}-${month}-${day}T${hour}%3A${min}%3A${sec}${sign}${tzHH}${tzMM}`
+}
+
 async function hmacSha1Base64(secret: string, message: string): Promise<string> {
   const enc = new TextEncoder()
   const key = await crypto.subtle.importKey(
@@ -72,7 +88,8 @@ export function createIflyAsrClient(cfg: IflyConfig, params: IflyParams = {}): I
       appId: cfg.appId,
       accessKeyId: cfg.accessKeyId,
       uuid: params.uuid,
-      utc: params.utc || new Date().toISOString().replace(/\..+/, '') + '+0800',
+      // 注意：utc 需包含时区偏移且其冒号需要 urlencode。这里直接生成已编码的冒号形式，避免被双重编码
+      utc: params.utc || formatUtcOffsetString(),
       lang: params.lang || 'autodialect',
       audio_encode: params.audio_encode || 'pcm_s16le',
       samplerate: params.samplerate || 16000,
@@ -94,8 +111,12 @@ export function createIflyAsrClient(cfg: IflyConfig, params: IflyParams = {}): I
       try {
         ws = new WebSocket(url)
         ws.binaryType = 'arraybuffer'
-        ws.onopen = () => resolve()
-        ws.onerror = (e) => reject(e)
+        const timer = setTimeout(() => {
+          try { ws?.close() } catch {}
+          reject(new Error('WebSocket open timeout'))
+        }, 8000)
+        ws.onopen = () => { clearTimeout(timer); resolve() }
+        ws.onerror = (e) => { clearTimeout(timer); errorHandler && errorHandler(e); reject(e) }
         ws.onmessage = (evt) => {
           try {
             const data = typeof evt.data === 'string' ? JSON.parse(evt.data) : evt.data
@@ -104,7 +125,10 @@ export function createIflyAsrClient(cfg: IflyConfig, params: IflyParams = {}): I
             errorHandler && errorHandler(err)
           }
         }
-        ws.onclose = () => {}
+        ws.onclose = (evt) => {
+          const info = { code: evt.code, reason: evt.reason, wasClean: evt.wasClean }
+          errorHandler && errorHandler(info)
+        }
       } catch (err) {
         reject(err)
       }
