@@ -57,7 +57,8 @@ function formatUtcOffsetString(date = new Date()): string {
   const tzAbs = Math.abs(tz)
   const tzHH = pad(Math.floor(tzAbs / 60))
   const tzMM = pad(tzAbs % 60)
-  return `${year}-${month}-${day}T${hour}%3A${min}%3A${sec}${sign}${tzHH}${tzMM}`
+  // 返回未编码的 UTC 字符串（冒号保持原样），交由 encodeQuery 统一编码
+  return `${year}-${month}-${day}T${hour}:${min}:${sec}${sign}${tzHH}${tzMM}`
 }
 
 async function hmacSha1Base64(secret: string, message: string): Promise<string> {
@@ -88,7 +89,7 @@ export function createIflyAsrClient(cfg: IflyConfig, params: IflyParams = {}): I
       appId: cfg.appId,
       accessKeyId: cfg.accessKeyId,
       uuid: params.uuid,
-      // 注意：utc 需包含时区偏移且其冒号需要 urlencode。这里直接生成已编码的冒号形式，避免被双重编码
+      // 注意：utc 需包含时区偏移。这里返回未编码版本，encodeQuery 会对冒号进行一次 URL 编码
       utc: params.utc || formatUtcOffsetString(),
       lang: params.lang || 'autodialect',
       audio_encode: params.audio_encode || 'pcm_s16le',
