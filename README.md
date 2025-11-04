@@ -17,7 +17,7 @@ src/
 │   ├── auth.ts            # 认证相关 API
 │   ├── plan.ts            # 行程相关 API
 │   ├── expense.ts         # 支出相关 API
-│   └── voice.ts           # 讯飞 ASR WebSocket API（握手、推流、结果）
+│   └── paraformer.ts      # 百炼 Paraformer 实时识别 WS（推流、结果）
 ├── assets/                 # 静态资源
 │   ├── base.css           # 基础样式
 │   └── main.css           # 主样式
@@ -76,12 +76,12 @@ VITE_BAILIAN_ASR_ENDPOINT=your_asr_endpoint
 VITE_BAILIAN_LLM_ENDPOINT=your_llm_endpoint
 VITE_BAILIAN_MODEL_NAME=qwen-max
 
-# 讯飞 ASR（实时语音转写）
-VITE_IFLY_APP_ID=your_ifly_app_id
-VITE_IFLY_ACCESS_KEY_ID=your_ifly_access_key_id
-VITE_IFLY_ACCESS_KEY_SECRET=your_ifly_access_key_secret
+# 百炼 Paraformer 实时识别
+VITE_PF_API_KEY=your_dashscope_api_key_or_temp_token
 # 可选：覆盖默认端点
-# VITE_IFLY_ASR_WS=wss://office-api-ast-dx.iflyaisol.com/ast/communicate/v1
+# VITE_PF_ASR_WS=wss://dashscope.aliyuncs.com/api-ws/v1/paraformer
+# 可选：指定模型（默认 paraformer-realtime-v2）
+# VITE_PF_MODEL=paraformer-realtime-v2
 
 # 高德地图
 VITE_AMAP_KEY=your_amap_key

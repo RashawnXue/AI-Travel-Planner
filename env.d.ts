@@ -3,10 +3,10 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string
   readonly VITE_SUPABASE_ANON_KEY: string
-  readonly VITE_IFLY_APP_ID?: string
-  readonly VITE_IFLY_ACCESS_KEY_ID?: string
-  readonly VITE_IFLY_ACCESS_KEY_SECRET?: string
-  readonly VITE_IFLY_ASR_WS?: string
+  // 百炼 Paraformer
+  readonly VITE_PF_API_KEY?: string
+  readonly VITE_PF_ASR_WS?: string
+  readonly VITE_PF_MODEL?: string
 }
 
 interface ImportMeta {

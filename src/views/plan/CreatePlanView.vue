@@ -346,7 +346,7 @@ import { message } from 'ant-design-vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { invokeBailianApp, extractBailianText, parsePlanJsonFromText } from '@/api/ai'
 import { createPcm16kRecorder } from '@/utils/audio'
-import { createIflyAsrClient, parseIflyPartialText } from '@/api/voice'
+import { createParaformerClient, parseParaformerText } from '@/api/paraformer'
 import { createPlanFromAI } from '@/api/plan'
 import { supabase } from '@/utils/supabase'
 import type { AIResponse } from '@/types/plan'
@@ -398,7 +398,7 @@ let recorder = createPcm16kRecorder((chunk) => {
   }
 })
 
-let asrClient: ReturnType<typeof createIflyAsrClient> | null = null
+let asrClient: ReturnType<typeof createParaformerClient> | null = null
 const sessionId = ref<string>('')
 
 async function startRecording() {
@@ -408,34 +408,25 @@ async function startRecording() {
   sessionId.value = crypto.randomUUID()
 
   const cfg = {
-    appId: import.meta.env.VITE_IFLY_APP_ID || '',
-    accessKeyId: import.meta.env.VITE_IFLY_ACCESS_KEY_ID || '',
-    accessKeySecret: import.meta.env.VITE_IFLY_ACCESS_KEY_SECRET || '',
-    endpoint: import.meta.env.VITE_IFLY_ASR_WS || undefined
+    endpoint: import.meta.env.VITE_PF_ASR_WS || undefined,
+    apiKey: import.meta.env.VITE_PF_API_KEY || '',
+    model: import.meta.env.VITE_PF_MODEL || 'paraformer-realtime-v2',
+    sampleRate: 16000,
+    format: 'pcm_s16le',
+    queryAuth: false
   }
-  if (!cfg.appId || !cfg.accessKeyId || !cfg.accessKeySecret) {
-    message.error('语音配置缺失：请在 .env 配置 VITE_IFLY_* 后重启服务')
-    console.error('[ASR] Missing env vars: VITE_IFLY_APP_ID / VITE_IFLY_ACCESS_KEY_ID / VITE_IFLY_ACCESS_KEY_SECRET')
+  if (!cfg.apiKey) {
+    message.error('语音配置缺失：请在 .env 配置 VITE_PF_API_KEY 后重启服务')
+    console.error('[ASR] Missing env var: VITE_PF_API_KEY')
     return
   }
 
-  asrClient = createIflyAsrClient(cfg, {
-    uuid: sessionId.value,
-    lang: 'autodialect',
-    audio_encode: 'pcm_s16le',
-    samplerate: 16000,
-    eng_vad_mdn: 1
-  })
+  asrClient = createParaformerClient(cfg)
 
   asrClient.onResult((data) => {
     // 结果与异常都可能走 onmessage，这里先判断结构
-    if (typeof data === 'object' && data?.msg_type === 'result' && data?.res_type === 'asr') {
-      const text = parseIflyPartialText(data)
-      if (text) recognizedText.value += text
-    } else if (data?.action === 'error' || data?.code) {
-      message.error(data?.desc || '语音识别出错')
-      console.error('[ASR] result error payload:', data)
-    }
+    const text = parseParaformerText(data)
+    if (text) recognizedText.value += text
   })
   asrClient.onError((err) => {
     console.error('[ASR] websocket error/close:', err)
