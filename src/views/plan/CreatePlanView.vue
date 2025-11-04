@@ -690,6 +690,14 @@ async function generatePlan() {
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* 隐藏滚动条（仍可滚动） */
+  scrollbar-width: none;           /* Firefox */
+  -ms-overflow-style: none;        /* IE 10+ */
+}
+
+.page-card::-webkit-scrollbar {    /* Chrome/Safari */
+  width: 0;
+  height: 0;
 }
 
 /* ==================== Hero 区域 ==================== */
