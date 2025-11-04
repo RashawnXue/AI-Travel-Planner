@@ -2,9 +2,7 @@
  * 阿里云百炼 Paraformer 实时语音识别 WebSocket 客户端
  * 参考文档：https://help.aliyun.com/zh/model-studio/websocket-for-paraformer-real-time-service
  *
- * 说明：浏览器环境无法自定义 WS Header，常见做法是通过子协议或查询参数传 token。
- * 这里优先使用子协议传递：Sec-WebSocket-Protocol = `dashscope.${token}`；
- * 若服务端要求 query 方式，也支持通过 `?token=...` 传递。
+ * 说明：通过 query 参数传递 token（API Key），符合百炼 WebSocket API 规范。
  */
 
 export type ParaformerConfig = {
@@ -13,7 +11,6 @@ export type ParaformerConfig = {
   model?: string // paraformer-realtime-v2 / paraformer-realtime-8k-v2 / ...
   sampleRate?: number // 16000 / 8000
   format?: 'pcm_s16le' | 'opus' | 'speex'
-  queryAuth?: boolean // 将 token 以 query 传参（兼容某些网关限制）
 }
 
 export type ParaformerClient = {
@@ -29,10 +26,11 @@ export type ParaformerClient = {
 function buildUrl(cfg: ParaformerConfig): string {
   const endpoint = cfg.endpoint || 'wss://dashscope.aliyuncs.com/api-ws/v1/paraformer'
   const params = new URLSearchParams()
+  // 百炼要求通过 query 参数传递 token（API Key）
+  params.set('token', cfg.apiKey)
   if (cfg.model) params.set('model', cfg.model)
   if (cfg.sampleRate) params.set('sample_rate', String(cfg.sampleRate))
   if (cfg.format) params.set('format', cfg.format)
-  if (cfg.queryAuth) params.set('token', cfg.apiKey)
   const qs = params.toString()
   return qs ? `${endpoint}?${qs}` : endpoint
 }
@@ -44,30 +42,44 @@ export function createParaformerClient(cfg: ParaformerConfig): ParaformerClient 
 
   async function connect(): Promise<void> {
     const url = buildUrl(cfg)
+    console.log('[Paraformer] Connecting to:', url.replace(/token=[^&]+/, 'token=***'))
     return new Promise((resolve, reject) => {
       try {
-        const protocols = cfg.queryAuth ? [] : [`dashscope.${cfg.apiKey}`]
-        ws = new WebSocket(url, protocols)
+        // 百炼通过 query 参数传递 token，不需要子协议
+        ws = new WebSocket(url)
         ws.binaryType = 'arraybuffer'
         const timer = setTimeout(() => {
           try { ws?.close() } catch {}
           reject(new Error('WebSocket open timeout'))
         }, 8000)
-        ws.onopen = () => { clearTimeout(timer); resolve() }
-        ws.onerror = (e) => { clearTimeout(timer); errorHandler && errorHandler(e); reject(e) }
+        ws.onopen = () => {
+          clearTimeout(timer)
+          console.log('[Paraformer] WebSocket connected')
+          resolve()
+        }
+        ws.onerror = (e) => {
+          clearTimeout(timer)
+          console.error('[Paraformer] WebSocket error:', e)
+          errorHandler && errorHandler(e)
+          reject(e)
+        }
         ws.onmessage = (evt) => {
           try {
             const data = typeof evt.data === 'string' ? JSON.parse(evt.data) : evt.data
+            console.log('[Paraformer] Received:', data)
             resultHandler && resultHandler(data)
           } catch (err) {
+            console.error('[Paraformer] Parse message error:', err)
             errorHandler && errorHandler(err)
           }
         }
         ws.onclose = (evt) => {
           const info = { code: evt.code, reason: evt.reason, wasClean: evt.wasClean }
+          console.error('[Paraformer] WebSocket closed:', info)
           errorHandler && errorHandler(info)
         }
       } catch (err) {
+        console.error('[Paraformer] Create WebSocket error:', err)
         reject(err)
       }
     })

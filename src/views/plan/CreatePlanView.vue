@@ -412,8 +412,7 @@ async function startRecording() {
     apiKey: import.meta.env.VITE_PF_API_KEY || '',
     model: import.meta.env.VITE_PF_MODEL || 'paraformer-realtime-v2',
     sampleRate: 16000,
-    format: 'pcm_s16le',
-    queryAuth: false
+    format: 'pcm_s16le'
   }
   if (!cfg.apiKey) {
     message.error('语音配置缺失：请在 .env 配置 VITE_PF_API_KEY 后重启服务')
