@@ -593,7 +593,8 @@ async function generatePlan() {
   padding-top: 64px;
   position: relative;
   overflow-x: hidden;
-  overflow-y: auto;
+  /* 仅隐藏外层页面滚动，保留卡片内滚动 */
+  overflow-y: hidden;
 }
 
 /* ==================== 装饰背景 ==================== */
@@ -690,14 +691,6 @@ async function generatePlan() {
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* 隐藏滚动条（仍可滚动） */
-  scrollbar-width: none;           /* Firefox */
-  -ms-overflow-style: none;        /* IE 10+ */
-}
-
-.page-card::-webkit-scrollbar {    /* Chrome/Safari */
-  width: 0;
-  height: 0;
 }
 
 /* ==================== Hero 区域 ==================== */
