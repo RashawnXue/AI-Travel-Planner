@@ -414,7 +414,8 @@ async function startRecording() {
     endpoint: import.meta.env.VITE_IFLY_ASR_WS || undefined
   }
   if (!cfg.appId || !cfg.accessKeyId || !cfg.accessKeySecret) {
-    message.error('语音配置缺失，请在环境变量中配置讯飞访问凭证')
+    message.error('语音配置缺失：请在 .env 配置 VITE_IFLY_* 后重启服务')
+    console.error('[ASR] Missing env vars: VITE_IFLY_APP_ID / VITE_IFLY_ACCESS_KEY_ID / VITE_IFLY_ACCESS_KEY_SECRET')
     return
   }
 
@@ -433,15 +434,29 @@ async function startRecording() {
       if (text) recognizedText.value += text
     } else if (data?.action === 'error' || data?.code) {
       message.error(data?.desc || '语音识别出错')
+      console.error('[ASR] result error payload:', data)
     }
   })
   asrClient.onError((err) => {
-    console.error('ASR error:', err)
-    message.error('语音识别连接异常')
+    console.error('[ASR] websocket error:', err)
+    message.error('语音识别连接异常，请检查网络或密钥配置')
   })
 
-  await asrClient.connect()
-  await recorder.start()
+  try {
+    await asrClient.connect()
+  } catch (e) {
+    console.error('[ASR] connect failed:', e)
+    message.error('无法连接语音服务，请检查端点与网络')
+    return
+  }
+  try {
+    await recorder.start()
+  } catch (e) {
+    console.error('[ASR] mic start failed:', e)
+    message.error('无法访问麦克风，请允许浏览器麦克风权限')
+    asrClient.close()
+    return
+  }
   isRecording.value = true
 }
 
