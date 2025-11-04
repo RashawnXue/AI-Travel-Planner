@@ -345,6 +345,8 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { invokeBailianApp, extractBailianText, parsePlanJsonFromText } from '@/api/ai'
+import { createPcm16kRecorder } from '@/utils/audio'
+import { createIflyAsrClient, parseIflyPartialText } from '@/api/voice'
 import { createPlanFromAI } from '@/api/plan'
 import { supabase } from '@/utils/supabase'
 import type { AIResponse } from '@/types/plan'
@@ -390,20 +392,79 @@ const canGenerate = computed(() => {
 })
 
 // 语音录音切换
+let recorder = createPcm16kRecorder((chunk) => {
+  if (asrClient && asrClient.isOpen()) {
+    asrClient.sendAudio(chunk)
+  }
+})
+
+let asrClient: ReturnType<typeof createIflyAsrClient> | null = null
+const sessionId = ref<string>('')
+
+async function startRecording() {
+  if (isRecording.value) return
+  isRecognizing.value = false
+  recognizedText.value = ''
+  sessionId.value = crypto.randomUUID()
+
+  const cfg = {
+    appId: import.meta.env.VITE_IFLY_APP_ID || '',
+    accessKeyId: import.meta.env.VITE_IFLY_ACCESS_KEY_ID || '',
+    accessKeySecret: import.meta.env.VITE_IFLY_ACCESS_KEY_SECRET || '',
+    endpoint: import.meta.env.VITE_IFLY_ASR_WS || undefined
+  }
+  if (!cfg.appId || !cfg.accessKeyId || !cfg.accessKeySecret) {
+    message.error('语音配置缺失，请在环境变量中配置讯飞访问凭证')
+    return
+  }
+
+  asrClient = createIflyAsrClient(cfg, {
+    uuid: sessionId.value,
+    lang: 'autodialect',
+    audio_encode: 'pcm_s16le',
+    samplerate: 16000,
+    eng_vad_mdn: 1
+  })
+
+  asrClient.onResult((data) => {
+    // 结果与异常都可能走 onmessage，这里先判断结构
+    if (typeof data === 'object' && data?.msg_type === 'result' && data?.res_type === 'asr') {
+      const text = parseIflyPartialText(data)
+      if (text) recognizedText.value += text
+    } else if (data?.action === 'error' || data?.code) {
+      message.error(data?.desc || '语音识别出错')
+    }
+  })
+  asrClient.onError((err) => {
+    console.error('ASR error:', err)
+    message.error('语音识别连接异常')
+  })
+
+  await asrClient.connect()
+  await recorder.start()
+  isRecording.value = true
+}
+
+async function stopRecording() {
+  if (!isRecording.value) return
+  isRecording.value = false
+  isRecognizing.value = true
+  await recorder.stop()
+  try {
+    asrClient?.end(sessionId.value)
+  } finally {
+    setTimeout(() => {
+      asrClient?.close()
+      isRecognizing.value = false
+    }, 500)
+  }
+}
+
 const toggleRecording = () => {
   if (!isRecording.value) {
-    isRecording.value = true
-    // TODO: 接入真实语音识别 SDK
-    setTimeout(() => {
-      isRecording.value = false
-      isRecognizing.value = true
-      setTimeout(() => {
-        isRecognizing.value = false
-        recognizedText.value = '我想去上海旅行3天，预算8000元，喜欢动漫和亲子活动'
-      }, 1500)
-    }, 3000)
+    startRecording()
   } else {
-    isRecording.value = false
+    stopRecording()
   }
 }
 
