@@ -26,12 +26,12 @@ export type TranscriptionResult = {
     audio_format: string
     channels: number[]
     original_sampling_rate: number
-    original_duration: number
+    original_duration_in_milliseconds: number
   }
   transcripts: Array<{
     channel_id: number
-    content_duration: number
-    transcript: string
+    content_duration_in_milliseconds: number
+    text: string
     sentences?: Array<{
       begin_time: number
       end_time: number
@@ -139,16 +139,22 @@ async function queryAsrTask(taskId: string): Promise<{
  * 获取识别结果文本
  */
 async function getTranscriptionText(transcriptionUrl: string): Promise<string> {
+  console.log('正在获取识别结果:', transcriptionUrl)
   const response = await fetch(transcriptionUrl)
   if (!response.ok) {
     throw new Error('获取识别结果失败')
   }
 
   const result: TranscriptionResult = await response.json()
+  console.log('识别结果完整数据:', result)
   
-  return result.transcripts
-    .map(t => t.transcript)
+  // 从 transcripts[0].text 中提取识别内容
+  const text = result.transcripts
+    .map(t => t.text)
     .join('\n')
+  
+  console.log('提取的文本:', text)
+  return text
 }
 
 /**
@@ -177,15 +183,19 @@ export async function recognizeAudioBlob(blob: Blob): Promise<string> {
       
       const result = await queryAsrTask(taskId)
       console.log(`查询进度 (${attempts + 1}/${maxAttempts}):`, result.output.task_status)
+      console.log('完整查询结果:', JSON.stringify(result, null, 2))
       
       if (result.output.task_status === 'SUCCEEDED') {
         const transcriptionUrl = result.output.results?.[0]?.transcription_url
+        console.log('识别结果 URL:', transcriptionUrl)
         if (!transcriptionUrl) {
+          console.error('results 数据:', result.output.results)
           throw new Error('未获取到识别结果 URL')
         }
         
         // 4. 获取识别结果文本
         const text = await getTranscriptionText(transcriptionUrl)
+        console.log('最终识别文本:', text)
         
         // 5. 删除临时文件
         await deleteFromOSS(fileUrl)
@@ -193,6 +203,7 @@ export async function recognizeAudioBlob(blob: Blob): Promise<string> {
         return text
       } else if (result.output.task_status === 'FAILED') {
         const errorMsg = result.output.results?.[0]?.message || '识别失败'
+        console.error('识别失败:', errorMsg)
         throw new Error(errorMsg)
       }
       

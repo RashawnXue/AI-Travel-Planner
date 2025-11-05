@@ -20,7 +20,9 @@ export default defineConfig({
       '/api/dashscope': {
         target: 'https://dashscope.aliyuncs.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/dashscope/, '')
+        rewrite: (path) => path.replace(/^\/api\/dashscope/, ''),
+        timeout: 300000, // 5 分钟超时（毫秒）
+        proxyTimeout: 300000 // 代理超时时间
       }
     }
   }

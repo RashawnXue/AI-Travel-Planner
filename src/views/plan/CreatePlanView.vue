@@ -141,7 +141,6 @@
             <div 
               class="preview-content" 
               contenteditable="true"
-              @input="onPreviewInput"
               @blur="onPreviewBlur"
               ref="previewContentRef"
               placeholder="点击编辑识别结果..."
@@ -313,6 +312,21 @@
         <!-- 生成按钮（底部粘性操作区） -->
         <div class="generate-section">
           <div class="generate-card">
+            <!-- 进度条 -->
+            <div v-show="isGenerating" class="progress-wrapper">
+              <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: `${generateProgress}%` }"></div>
+              </div>
+              <div class="progress-text">
+                <span class="progress-icon">{{ progressIcon }}</span>
+                <span class="progress-label">{{ progressText }}</span>
+                <span class="progress-percent">{{ generateProgress }}%</span>
+              </div>
+              <div class="progress-hint">
+                💡 AI 正在为您精心规划行程，可能需要 1-2 分钟，请耐心等待...
+              </div>
+            </div>
+
             <a-button 
               type="primary" 
               size="large"
@@ -403,6 +417,44 @@ const canGenerate = computed(() => {
   return hasInput && !isGenerating.value
 })
 
+// 生成进度
+const generateProgress = ref(0)
+const progressText = ref('')
+const progressIcon = ref('🚀')
+
+const progressSteps = [
+  { percent: 20, text: '正在分析需求...', icon: '🔍' },
+  { percent: 40, text: '正在规划路线...', icon: '🗺️' },
+  { percent: 60, text: '正在优化行程...', icon: '⚙️' },
+  { percent: 80, text: '正在生成详情...', icon: '📝' },
+  { percent: 95, text: '即将完成...', icon: '✨' }
+]
+
+function startProgress() {
+  generateProgress.value = 0
+  let currentStep = 0
+  
+  const interval = setInterval(() => {
+    if (currentStep < progressSteps.length) {
+      const step = progressSteps[currentStep]!
+      generateProgress.value = step.percent
+      progressText.value = step.text
+      progressIcon.value = step.icon
+      currentStep++
+    } else {
+      clearInterval(interval)
+    }
+  }, 3000) // 每3秒更新一次进度
+  
+  return interval
+}
+
+function completeProgress() {
+  generateProgress.value = 100
+  progressText.value = '生成完成！'
+  progressIcon.value = '✅'
+}
+
 // 语音录音相关
 const recorder = createWavRecorder()
 let recordedBlob: Blob | null = null
@@ -443,9 +495,20 @@ async function stopRecording() {
 
     // 调用录音文件识别 API
     const text = await recognizeAudioBlob(recordedBlob)
-    recognizedText.value = text
-
-    console.log(text)
+    
+    // 检查识别结果是否为空
+    if (!text || text.trim().length === 0) {
+      message.warning({
+        content: '未识别到语音内容，请重新录音',
+        duration: 3
+      })
+      recognizedText.value = ''
+      recordedBlob = null
+      return
+    }
+    
+    recognizedText.value = text.trim()
+    console.log('识别结果:', text)
 
     // 识别成功后，临时文件会在 recognizeAudioBlob 内部删除
     recordedBlob = null
@@ -471,10 +534,6 @@ const retryVoice = () => {
   recognizedText.value = ''
   isRecording.value = false
   isRecognizing.value = false
-}
-
-const onPreviewInput = (e: Event) => {
-  recognizedText.value = (e.target as HTMLElement).innerText
 }
 
 const onPreviewBlur = (e: Event) => {
@@ -512,6 +571,7 @@ async function generatePlan() {
   if (!canGenerate.value) return
 
   isGenerating.value = true
+  const progressInterval = startProgress()
   let userId: string | null = null
 
   try {
@@ -558,7 +618,12 @@ async function generatePlan() {
 
     const aiObj = parsePlanJsonFromText<AIResponse>(text)
     if (!aiObj) {
-      throw new Error('无法从 AI 返回中解析出有效的 JSON 行程数据')
+      console.error('AI 返回的内容无法解析为 JSON:', text)
+      message.warning({
+        content: '出现了点小差错，请您重试一下，下次一定成功！ 🙏',
+        duration: 3
+      })
+      return // 直接返回，不抛出错误，保持表单状态以便重试
     }
 
     console.log('Parsed AI response:', aiObj)
@@ -571,6 +636,9 @@ async function generatePlan() {
       throw new Error(createRes.error?.message || '持久化行程失败')
     }
 
+    completeProgress()
+    await new Promise(resolve => setTimeout(resolve, 500)) // 显示完成状态
+    
     message.success('行程生成并保存成功！')
     // 返回首页并展示新创建的行程
     router.push({ path: '/', query: { planId: createRes.data.id } })
@@ -579,7 +647,11 @@ async function generatePlan() {
     console.error('Generate plan error:', e)
     message.error(e.message || '生成行程失败')
   } finally {
+    clearInterval(progressInterval)
     isGenerating.value = false
+    setTimeout(() => {
+      generateProgress.value = 0
+    }, 500)
   }
 }
 </script>
@@ -1629,6 +1701,86 @@ async function generatePlan() {
   border-radius: 20px;
   border: 2px solid rgba(30, 136, 229, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* 进度条 */
+.progress-wrapper {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(30, 136, 229, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1E88E5 0%, #26C6DA 100%);
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.progress-icon {
+  font-size: 18px;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.progress-label {
+  flex: 1;
+}
+
+.progress-percent {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.progress-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  line-height: 1.5;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #1E88E5;
 }
 
 .generate-btn {
