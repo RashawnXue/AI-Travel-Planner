@@ -69,7 +69,6 @@ async function deleteFromOSS(fileUrl: string): Promise<void> {
     const url = new URL(fileUrl)
     const fileName = url.pathname.substring(1) // 去掉开头的 /
     await client.delete(fileName)
-    console.log('临时文件已删除:', fileName)
   } catch (e) {
     console.error('删除临时文件失败:', e)
   }
@@ -139,21 +138,18 @@ async function queryAsrTask(taskId: string): Promise<{
  * 获取识别结果文本
  */
 async function getTranscriptionText(transcriptionUrl: string): Promise<string> {
-  console.log('正在获取识别结果:', transcriptionUrl)
   const response = await fetch(transcriptionUrl)
   if (!response.ok) {
     throw new Error('获取识别结果失败')
   }
 
   const result: TranscriptionResult = await response.json()
-  console.log('识别结果完整数据:', result)
   
   // 从 transcripts[0].text 中提取识别内容
   const text = result.transcripts
     .map(t => t.text)
     .join('\n')
   
-  console.log('提取的文本:', text)
   return text
 }
 
@@ -165,14 +161,10 @@ export async function recognizeAudioBlob(blob: Blob): Promise<string> {
   
   try {
     // 1. 上传音频文件到 OSS 获取公网 URL
-    console.log('正在上传音频文件到 OSS...')
     fileUrl = await uploadToOSS(blob)
-    console.log('音频文件已上传:', fileUrl)
     
     // 2. 提交识别任务
-    console.log('正在提交识别任务...')
     const taskId = await submitAsrTask(fileUrl)
-    console.log('任务已提交:', taskId)
     
     // 3. 轮询查询任务状态
     let attempts = 0
@@ -182,12 +174,9 @@ export async function recognizeAudioBlob(blob: Blob): Promise<string> {
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       const result = await queryAsrTask(taskId)
-      console.log(`查询进度 (${attempts + 1}/${maxAttempts}):`, result.output.task_status)
-      console.log('完整查询结果:', JSON.stringify(result, null, 2))
       
       if (result.output.task_status === 'SUCCEEDED') {
         const transcriptionUrl = result.output.results?.[0]?.transcription_url
-        console.log('识别结果 URL:', transcriptionUrl)
         if (!transcriptionUrl) {
           console.error('results 数据:', result.output.results)
           throw new Error('未获取到识别结果 URL')
@@ -195,7 +184,6 @@ export async function recognizeAudioBlob(blob: Blob): Promise<string> {
         
         // 4. 获取识别结果文本
         const text = await getTranscriptionText(transcriptionUrl)
-        console.log('最终识别文本:', text)
         
         // 5. 删除临时文件
         await deleteFromOSS(fileUrl)

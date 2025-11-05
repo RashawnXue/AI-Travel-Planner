@@ -508,7 +508,6 @@ async function stopRecording() {
     }
     
     recognizedText.value = text.trim()
-    console.log('识别结果:', text)
 
     // 识别成功后，临时文件会在 recognizeAudioBlob 内部删除
     recordedBlob = null
@@ -577,7 +576,6 @@ async function generatePlan() {
   try {
     // 1. 首先检查用户是否已登录并立即获取 user_id
     const { data: userSession, error: userError } = await supabase.auth.getSession()
-    console.log('Current user session:', userSession)
 
     if (userError || !userSession?.session?.user?.id) {
       message.error('请先登录后再生成行程')
@@ -587,7 +585,6 @@ async function generatePlan() {
 
     // 立即保存用户 ID，后续使用此 ID 而不是重新获取
     userId = userSession.session.user.id
-    console.log('User ID saved:', userId)
 
     const userPrompt = activeTab.value === 'voice' ? recognizedText.value : textInput.value
 
@@ -602,10 +599,8 @@ async function generatePlan() {
     if (formData.value.startDate) promptParts.push(`出发日期：${formData.value.startDate}`)
 
     const prompt = promptParts.join('\n')
-    console.log('Sending prompt to AI:', prompt)
 
     const res = await invokeBailianApp({ prompt })
-    console.log('AI raw response:', res)
 
     if (res.error || !res.data) {
       throw new Error(res.error?.message || '调用 AI 接口失败')
@@ -614,7 +609,6 @@ async function generatePlan() {
     // 从返回中提取文本并尝试解析为 JSON
     const raw = res.data
     const text = extractBailianText(raw) ?? (typeof raw === 'string' ? raw : JSON.stringify(raw))
-    console.log('AI extracted text:', text)
 
     const aiObj = parsePlanJsonFromText<AIResponse>(text)
     if (!aiObj) {
@@ -626,11 +620,8 @@ async function generatePlan() {
       return // 直接返回，不抛出错误，保持表单状态以便重试
     }
 
-    console.log('Parsed AI response:', aiObj)
-
     // 使用之前保存的 userId 而不是重新获取
     const createRes = await createPlanFromAI(aiObj, userId)
-    console.log('Create plan response:', createRes)
 
     if (createRes.error || !createRes.data) {
       throw new Error(createRes.error?.message || '持久化行程失败')
@@ -644,7 +635,6 @@ async function generatePlan() {
     router.push({ path: '/', query: { planId: createRes.data.id } })
   } catch (err) {
     const e = err as Error
-    console.error('Generate plan error:', e)
     message.error(e.message || '生成行程失败')
   } finally {
     clearInterval(progressInterval)
