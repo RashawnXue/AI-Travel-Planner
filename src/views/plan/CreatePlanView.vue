@@ -125,19 +125,31 @@
             <div class="preview-header">
               <div class="preview-title">
                 <span class="preview-icon">✅</span>
-                <span class="preview-label">识别结果</span>
+                <span class="preview-label">识别结果（可编辑）</span>
               </div>
-              <span class="retry-link" @click="retryVoice">
-                <span class="retry-icon">🔄</span>
-                重新录音
-              </span>
+              <div class="preview-actions">
+                <span class="copy-link" @click="copyRecognizedText">
+                  <span class="copy-icon">📋</span>
+                  复制
+                </span>
+                <span class="retry-link" @click="retryVoice">
+                  <span class="retry-icon">🔄</span>
+                  重新录音
+                </span>
+              </div>
             </div>
             <div 
               class="preview-content" 
               contenteditable="true"
               @input="onPreviewInput"
+              @blur="onPreviewBlur"
+              ref="previewContentRef"
+              placeholder="点击编辑识别结果..."
             >
               {{ recognizedText }}
+            </div>
+            <div class="preview-footer">
+              <span class="preview-hint">💡 可直接编辑修改识别结果</span>
             </div>
           </div>
         </div>
@@ -433,6 +445,8 @@ async function stopRecording() {
     const text = await recognizeAudioBlob(recordedBlob)
     recognizedText.value = text
 
+    console.log(text)
+
     // 识别成功后，临时文件会在 recognizeAudioBlob 内部删除
     recordedBlob = null
   } catch (e) {
@@ -462,6 +476,21 @@ const retryVoice = () => {
 const onPreviewInput = (e: Event) => {
   recognizedText.value = (e.target as HTMLElement).innerText
 }
+
+const onPreviewBlur = (e: Event) => {
+  recognizedText.value = (e.target as HTMLElement).innerText.trim()
+}
+
+const copyRecognizedText = async () => {
+  try {
+    await navigator.clipboard.writeText(recognizedText.value)
+    message.success('已复制到剪贴板')
+  } catch {
+    message.error('复制失败')
+  }
+}
+
+const previewContentRef = ref<HTMLElement | null>(null)
 
 const toggleCollapse = () => {
   isCollapseOpen.value = !isCollapseOpen.value
@@ -1172,19 +1201,74 @@ async function generatePlan() {
   font-size: 15px;
 }
 
+.preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.copy-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.copy-link:hover {
+  background: rgba(30, 136, 229, 0.1);
+}
+
+.copy-icon {
+  font-size: 16px;
+}
+
 .preview-content {
   font-size: 15px;
   line-height: 1.8;
   color: #333;
   outline: none;
-  min-height: 60px;
-  padding: 8px;
+  min-height: 80px;
+  padding: 12px;
   border-radius: 8px;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  cursor: text;
+}
+
+.preview-content:empty:before {
+  content: attr(placeholder);
+  color: #999;
+}
+
+.preview-content:hover {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(30, 136, 229, 0.1);
 }
 
 .preview-content:focus {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+}
+
+.preview-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1.5px solid rgba(30, 136, 229, 0.1);
+}
+
+.preview-hint {
+  font-size: 13px;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .retry-link {

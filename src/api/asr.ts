@@ -8,15 +8,16 @@
 import OSS from 'ali-oss'
 
 const API_KEY = import.meta.env.VITE_PF_API_KEY || ''
-const SUBMIT_URL = 'https://dashscope.aliyuncs.com/api/v1/services/audio/asr/transcription'
-const QUERY_URL_BASE = 'https://dashscope.aliyuncs.com/api/v1/tasks'
+const SUBMIT_URL = '/api/dashscope/api/v1/services/audio/asr/transcription'
+const QUERY_URL_BASE = '/api/dashscope/api/v1/tasks'
 
 // OSS 配置
 const OSS_CONFIG = {
   region: import.meta.env.VITE_OSS_REGION || 'oss-cn-shanghai',
   accessKeyId: import.meta.env.VITE_OSS_ACCESS_KEY_ID || '',
   accessKeySecret: import.meta.env.VITE_OSS_ACCESS_KEY_SECRET || '',
-  bucket: import.meta.env.VITE_OSS_BUCKET || ''
+  bucket: import.meta.env.VITE_OSS_BUCKET || '',
+  secure: true // 使用 HTTPS
 }
 
 export type TranscriptionResult = {
@@ -47,13 +48,16 @@ async function uploadToOSS(blob: Blob): Promise<string> {
   
   const fileName = `recordings/${Date.now()}_${Math.random().toString(36).slice(2)}.webm`
   
+  // 使用 put 方法上传，设置公共读权限和 CORS 头
   const result = await client.put(fileName, blob, {
     headers: {
-      'Content-Type': 'audio/webm'
+      'Content-Type': 'audio/webm',
+      'x-oss-object-acl': 'public-read'
     }
   })
   
-  return result.url
+  // 返回使用 HTTPS 的公网 URL
+  return result.url.replace('http://', 'https://')
 }
 
 /**
@@ -80,7 +84,8 @@ async function submitAsrTask(fileUrl: string): Promise<string> {
     headers: {
       'Authorization': `Bearer ${API_KEY}`,
       'Content-Type': 'application/json',
-      'X-DashScope-Async': 'enable'
+      'X-DashScope-Async': 'enable',
+      'X-DashScope-OssResourceResolve': 'enable'
     },
     body: JSON.stringify({
       model: 'paraformer-v2',
