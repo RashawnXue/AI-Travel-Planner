@@ -1,63 +1,61 @@
 /**
- * 音频工具：采集麦克风、下采样至 16k、转换 PCM Int16、分片发送
+ * 音频工具：采集麦克风、录制为 WAV 文件
  */
 
 export type RecorderControl = {
   start: () => Promise<void>
-  stop: () => Promise<void>
+  stop: () => Promise<Blob>
   isRunning: () => boolean
 }
 
-export type AudioSendCallback = (chunk: Uint8Array) => void
-
 /**
- * 创建麦克风录音器：
- * - 采集浏览器默认采样率音频
- * - 下采样至 16k 单声道
- * - 转换为 Int16 PCM 并分片为 1280 字节（约 40ms）回调发送
+ * 创建麦克风录音器，返回 WAV Blob
  */
-export function createPcm16kRecorder(onSend: AudioSendCallback): RecorderControl {
-  let audioContext: AudioContext | null = null
-  let source: MediaStreamAudioSourceNode | null = null
-  let processor: ScriptProcessorNode | null = null
+export function createWavRecorder(): RecorderControl {
+  let mediaRecorder: MediaRecorder | null = null
+  let audioChunks: Blob[] = []
   let running = false
 
   async function start() {
     if (running) return
     running = true
+    audioChunks = []
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-    source = audioContext.createMediaStreamSource(stream)
-    // 使用较小缓冲提高实时性；4096 也可，根据设备情况调整
-    processor = audioContext.createScriptProcessor(2048, 1, 1)
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: 'audio/webm'
+    })
 
-    processor.onaudioprocess = (e) => {
-      if (!running) return
-      const input = e.inputBuffer.getChannelData(0)
-      const down = downsampleTo16k(input, audioContext!.sampleRate)
-      const pcm = floatTo16BitPCM(down)
-      // 分片为 1280 字节（40ms at 16k * 2 bytes）
-      for (let offset = 0; offset < pcm.length; offset += 1280) {
-        const slice = pcm.subarray(offset, Math.min(offset + 1280, pcm.length))
-        onSend(slice)
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunks.push(event.data)
       }
     }
 
-    source.connect(processor)
-    processor.connect(audioContext.destination)
+    mediaRecorder.start()
   }
 
-  async function stop() {
+  async function stop(): Promise<Blob> {
     running = false
-    try {
-      processor?.disconnect()
-      source?.disconnect()
-      await audioContext?.close()
-    } catch {}
-    processor = null
-    source = null
-    audioContext = null
+    
+    return new Promise((resolve) => {
+      if (!mediaRecorder) {
+        resolve(new Blob())
+        return
+      }
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' })
+        
+        mediaRecorder?.stream.getTracks().forEach(track => track.stop())
+        mediaRecorder = null
+        audioChunks = []
+        
+        resolve(blob)
+      }
+
+      mediaRecorder.stop()
+    })
   }
 
   return {
@@ -65,40 +63,6 @@ export function createPcm16kRecorder(onSend: AudioSendCallback): RecorderControl
     stop,
     isRunning: () => running
   }
-}
-
-function downsampleTo16k(buffer: Float32Array, inputSampleRate: number): Float32Array {
-  if (inputSampleRate === 16000) return buffer
-  const sampleRateRatio = inputSampleRate / 16000
-  const newLength = Math.round(buffer.length / sampleRateRatio)
-  const result = new Float32Array(newLength)
-  let offsetResult = 0
-  let offsetBuffer = 0
-  while (offsetResult < result.length) {
-    const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio)
-    // 简单平均下采样
-    let accum = 0
-    let count = 0
-    for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
-      accum += buffer[i]
-      count++
-    }
-    result[offsetResult] = accum / (count || 1)
-    offsetResult++
-    offsetBuffer = nextOffsetBuffer
-  }
-  return result
-}
-
-function floatTo16BitPCM(input: Float32Array): Uint8Array {
-  const buffer = new ArrayBuffer(input.length * 2)
-  const view = new DataView(buffer)
-  let offset = 0
-  for (let i = 0; i < input.length; i++, offset += 2) {
-    let s = Math.max(-1, Math.min(1, input[i]))
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true)
-  }
-  return new Uint8Array(buffer)
 }
 
 

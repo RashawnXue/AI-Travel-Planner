@@ -124,30 +124,46 @@ export async function deletePlan(planId: string): Promise<ApiResponse<null>> {
 
 /**
  * 基于 AI 解析结果创建行程
- * 自动从当前登录用户中获取 user_id
+ * @param ai AI 生成的行程数据
+ * @param userId 用户 ID（由调用方提前获取，避免长时间操作后 session 过期）
  */
-export async function createPlanFromAI(ai: AIResponse): Promise<ApiResponse<{ id: string }>> {
+export async function createPlanFromAI(
+  ai: AIResponse, 
+  userId: string
+): Promise<ApiResponse<{ id: string }>> {
   try {
-    const { data: userRes, error: userErr } = await supabase.auth.getUser()
-    if (userErr || !userRes?.user?.id) {
+    if (!userId) {
       return {
         data: null,
-        error: { message: '未登录或无法获取用户信息' }
+        error: { message: '用户 ID 无效' }
       }
     }
 
+    // 如果没有出发日期，设置为当前日期后三天
+    let startDate: string
+    if (!ai.start_date || ai.start_date.trim() === '') {
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 3)
+      const isoDate = futureDate.toISOString().split('T')[0]
+      startDate = isoDate || ''
+    } else {
+      startDate = ai.start_date.trim()
+    }
+
     const payload = {
-      user_id: userRes.user.id,
-      title: ai.title,
-      destination: ai.destination,
-      days: ai.days,
-      budget: ai.budget,
-      travelers: ai.travelers,
-      preferences: ai.preferences,
-      start_date: ai.start_date,
-      summary: ai.summary,
+      user_id: userId,
+      title: ai.title?.trim() || '未命名行程',
+      destination: ai.destination?.trim() || '未知目的地',
+      days: ai.days || 1,
+      budget: ai.budget || 0,
+      travelers: ai.travelers || 1,
+      preferences: Array.isArray(ai.preferences) ? ai.preferences : [],
+      start_date: startDate,
+      summary: ai.summary?.trim() || '',
       ai_response: ai
     }
+
+    console.log('Inserting travel plan with payload:', payload)
 
     const { data, error } = await supabase
       .from('travel_plans')

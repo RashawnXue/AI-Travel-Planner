@@ -345,8 +345,8 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { invokeBailianApp, extractBailianText, parsePlanJsonFromText } from '@/api/ai'
-import { createPcm16kRecorder } from '@/utils/audio'
-import { createParaformerClient, parseParaformerText } from '@/api/paraformer'
+import { createWavRecorder } from '@/utils/audio'
+import { recognizeAudioBlob } from '@/api/asr'
 import { createPlanFromAI } from '@/api/plan'
 import { supabase } from '@/utils/supabase'
 import type { AIResponse } from '@/types/plan'
@@ -391,78 +391,57 @@ const canGenerate = computed(() => {
   return hasInput && !isGenerating.value
 })
 
-// 语音录音切换
-let recorder = createPcm16kRecorder((chunk) => {
-  if (asrClient && asrClient.isOpen()) {
-    asrClient.sendAudio(chunk)
-  }
-})
-
-let asrClient: ReturnType<typeof createParaformerClient> | null = null
-const sessionId = ref<string>('')
+// 语音录音相关
+const recorder = createWavRecorder()
+let recordedBlob: Blob | null = null
 
 async function startRecording() {
   if (isRecording.value) return
   isRecognizing.value = false
   recognizedText.value = ''
-  sessionId.value = crypto.randomUUID()
+  recordedBlob = null
 
-  const cfg = {
-    endpoint: import.meta.env.VITE_PF_ASR_WS || undefined,
-    apiKey: import.meta.env.VITE_PF_API_KEY || '',
-    model: import.meta.env.VITE_PF_MODEL || 'paraformer-realtime-v2',
-    sampleRate: 16000,
-    format: 'pcm_s16le'
-  }
-  if (!cfg.apiKey) {
+  if (!import.meta.env.VITE_PF_API_KEY) {
     message.error('语音配置缺失：请在 .env 配置 VITE_PF_API_KEY 后重启服务')
     console.error('[ASR] Missing env var: VITE_PF_API_KEY')
     return
   }
 
-  asrClient = createParaformerClient(cfg)
-
-  asrClient.onResult((data) => {
-    // 结果与异常都可能走 onmessage，这里先判断结构
-    const text = parseParaformerText(data)
-    if (text) recognizedText.value += text
-  })
-  asrClient.onError((err) => {
-    console.error('[ASR] websocket error/close:', err)
-    const detail = err?.reason || (err?.code ? `ws close code ${err.code}` : '')
-    message.error(`语音识别连接异常${detail ? `：${detail}` : ''}`)
-  })
-
-  try {
-    await asrClient.connect()
-  } catch (e) {
-    console.error('[ASR] connect failed:', e)
-    message.error('无法连接语音服务，请检查端点与网络')
-    return
-  }
   try {
     await recorder.start()
+    isRecording.value = true
   } catch (e) {
     console.error('[ASR] mic start failed:', e)
     message.error('无法访问麦克风，请允许浏览器麦克风权限')
-    asrClient.close()
-    return
   }
-  isRecording.value = true
 }
 
 async function stopRecording() {
   if (!isRecording.value) return
   isRecording.value = false
   isRecognizing.value = true
-  await recorder.stop()
+
   try {
-    asrClient?.end(sessionId.value)
+    // 停止录音并获取音频 Blob
+    recordedBlob = await recorder.stop()
+    
+    if (!recordedBlob || recordedBlob.size === 0) {
+      throw new Error('录音数据为空')
+    }
+
+    // 调用录音文件识别 API
+    const text = await recognizeAudioBlob(recordedBlob)
+    recognizedText.value = text
+
+    // 识别成功后，临时文件会在 recognizeAudioBlob 内部删除
+    recordedBlob = null
+  } catch (e) {
+    console.error('[ASR] recognition failed:', e)
+    const error = e as Error
+    message.error(`语音识别失败：${error.message}`)
+    recordedBlob = null
   } finally {
-    setTimeout(() => {
-      asrClient?.close()
-      isRecognizing.value = false
-    }, 500)
+    isRecognizing.value = false
   }
 }
 

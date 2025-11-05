@@ -284,7 +284,7 @@ const formatNumber = (num: number) => {
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
 
@@ -380,12 +380,14 @@ const formatNumber = (num: number) => {
   letter-spacing: 1px;
   margin-bottom: 6px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .info-card-value {
   font-size: 20px;
   color: #1a1a1a;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .info-card-value.highlight {

@@ -1,16 +1,9 @@
-/**
- * 阿里云百炼 Paraformer 实时语音识别 WebSocket 客户端
- * 参考文档：https://help.aliyun.com/zh/model-studio/websocket-for-paraformer-real-time-service
- *
- * 说明：通过 query 参数传递 token（API Key），符合百炼 WebSocket API 规范。
- */
-
 export type ParaformerConfig = {
-  endpoint?: string // 可覆盖默认端点
-  apiKey: string // DashScope API Key 或临时 Token
-  model?: string // paraformer-realtime-v2 / paraformer-realtime-8k-v2 / ...
-  sampleRate?: number // 16000 / 8000
-  format?: 'pcm_s16le' | 'opus' | 'speex'
+  endpoint?: string
+  apiKey: string
+  model?: string
+  sampleRate?: number
+  format?: string
 }
 
 export type ParaformerClient = {
@@ -18,92 +11,138 @@ export type ParaformerClient = {
   sendAudio: (chunk: Uint8Array) => void
   end: () => void
   close: () => void
-  onResult: (cb: (data: any) => void) => void
-  onError: (cb: (err: any) => void) => void
+  onResult: (cb: (data: unknown) => void) => void
+  onError: (cb: (err: unknown) => void) => void
   isOpen: () => boolean
 }
 
-function buildUrl(cfg: ParaformerConfig): string {
-  const endpoint = cfg.endpoint || 'wss://dashscope.aliyuncs.com/api-ws/v1/paraformer'
-  const params = new URLSearchParams()
-  // 百炼要求通过 query 参数传递 token（API Key）
-  params.set('token', cfg.apiKey)
-  if (cfg.model) params.set('model', cfg.model)
-  if (cfg.sampleRate) params.set('sample_rate', String(cfg.sampleRate))
-  if (cfg.format) params.set('format', cfg.format)
-  const qs = params.toString()
-  return qs ? `${endpoint}?${qs}` : endpoint
-}
-
 export function createParaformerClient(cfg: ParaformerConfig): ParaformerClient {
+  const url = cfg.endpoint || 'wss://dashscope.aliyuncs.com/api-ws/v1/inference/'
+  const apiKey = cfg.apiKey
   let ws: WebSocket | null = null
-  let resultHandler: ((data: any) => void) | null = null
-  let errorHandler: ((err: any) => void) | null = null
+  let resultHandler: ((data: unknown) => void) | null = null
+  let errorHandler: ((err: unknown) => void) | null = null
+  let taskStarted = false
+  const TASK_ID = typeof crypto.randomUUID === 'function' 
+    ? crypto.randomUUID().replace(/-/g, '').slice(0, 32)
+    : Date.now().toString(36) + Math.random().toString(36).slice(2, 18)
 
   async function connect(): Promise<void> {
-    const url = buildUrl(cfg)
-    console.log('[Paraformer] Connecting to:', url.replace(/token=[^&]+/, 'token=***'))
     return new Promise((resolve, reject) => {
-      try {
-        // 百炼通过 query 参数传递 token，不需要子协议
-        ws = new WebSocket(url)
-        ws.binaryType = 'arraybuffer'
-        const timer = setTimeout(() => {
-          try { ws?.close() } catch {}
-          reject(new Error('WebSocket open timeout'))
-        }, 8000)
-        ws.onopen = () => {
-          clearTimeout(timer)
-          console.log('[Paraformer] WebSocket connected')
-          resolve()
+      ws = new WebSocket(url)
+
+      ws.onopen = () => {
+        console.log('连接到服务器')
+        sendRunTask()
+      }
+
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data)
+        switch (message.header.event) {
+          case 'task-started':
+            console.log('任务开始')
+            taskStarted = true
+            resolve()
+            break
+          case 'result-generated':
+            console.log('识别结果：', message.payload.output.sentence.text)
+            if (message.payload.usage) {
+              console.log('任务计费时长（秒）：', message.payload.usage.duration)
+            }
+            if (resultHandler) resultHandler(message)
+            break
+          case 'task-finished':
+            console.log('任务完成')
+            if (resultHandler) resultHandler(message)
+            ws?.close()
+            break
+          case 'task-failed':
+            console.error('任务失败：', message.header.error_message)
+            if (errorHandler) errorHandler(message.header.error_message)
+            ws?.close()
+            break
+          default:
+            console.log('未知事件：', message.header.event)
         }
-        ws.onerror = (e) => {
-          clearTimeout(timer)
-          console.error('[Paraformer] WebSocket error:', e)
-          errorHandler && errorHandler(e)
-          reject(e)
+      }
+
+      ws.onclose = () => {
+        if (!taskStarted) {
+          console.error('任务未启动，关闭连接')
+          if (errorHandler) errorHandler(new Error('任务未启动'))
         }
-        ws.onmessage = (evt) => {
-          try {
-            const data = typeof evt.data === 'string' ? JSON.parse(evt.data) : evt.data
-            console.log('[Paraformer] Received:', data)
-            resultHandler && resultHandler(data)
-          } catch (err) {
-            console.error('[Paraformer] Parse message error:', err)
-            errorHandler && errorHandler(err)
-          }
-        }
-        ws.onclose = (evt) => {
-          const info = { code: evt.code, reason: evt.reason, wasClean: evt.wasClean }
-          console.error('[Paraformer] WebSocket closed:', info)
-          errorHandler && errorHandler(info)
-        }
-      } catch (err) {
-        console.error('[Paraformer] Create WebSocket error:', err)
-        reject(err)
+      }
+
+      ws.onerror = (error) => {
+        console.error('WebSocket错误：', error)
+        if (errorHandler) errorHandler(error)
+        reject(error)
       }
     })
   }
 
+  function sendRunTask() {
+    const runTaskMessage = {
+      header: {
+        action: 'run-task',
+        task_id: TASK_ID,
+        streaming: 'duplex'
+      },
+      payload: {
+        task_group: 'audio',
+        task: 'asr',
+        function: 'recognition',
+        model: cfg.model || 'paraformer-realtime-v2',
+        parameters: {
+          sample_rate: cfg.sampleRate || 16000,
+          format: cfg.format || 'pcm_s16le'
+        },
+        input: {}
+      }
+    }
+    ws!.send(JSON.stringify(runTaskMessage))
+  }
+
   function sendAudio(chunk: Uint8Array) {
-    if (ws && ws.readyState === WebSocket.OPEN) ws.send(chunk)
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(chunk)
+    }
   }
 
   function end() {
+    const finishTaskMessage = {
+      header: {
+        action: 'finish-task',
+        task_id: TASK_ID,
+        streaming: 'duplex'
+      },
+      payload: {
+        input: {}
+      }
+    }
     if (ws && ws.readyState === WebSocket.OPEN) {
-      // 百炼通常使用关闭连接作为结束标识；若需要显式 finish，可发送特定 JSON，留空以兼容
-      try { ws.close() } catch {}
+      ws.send(JSON.stringify(finishTaskMessage))
     }
   }
 
   function close() {
-    try { ws?.close() } catch {}
+    try {
+      ws?.close()
+    } catch {}
     ws = null
   }
 
-  function onResult(cb: (data: any) => void) { resultHandler = cb }
-  function onError(cb: (err: any) => void) { errorHandler = cb }
-  function isOpen() { return !!ws && ws.readyState === WebSocket.OPEN }
+  function onResult(cb: (data: unknown) => void) {
+    resultHandler = cb
+  }
+
+  function onError(cb: (err: unknown) => void) {
+    errorHandler = cb
+  }
+
+  function isOpen() {
+    return !!ws && ws.readyState === WebSocket.OPEN
+  }
 
   return { connect, sendAudio, end, close, onResult, onError, isOpen }
 }
@@ -112,16 +151,37 @@ export function createParaformerClient(cfg: ParaformerConfig): ParaformerClient 
  * 解析 Paraformer 的识别结果到纯文本。
  * 文档示例中可能返回字段：`result` / `output` / `text` 等。
  */
-export function parseParaformerText(payload: any): string | null {
-  if (!payload) return null
-  // 常见结构尝试
-  if (typeof payload.text === 'string') return payload.text
-  if (payload?.result?.text) return String(payload.result.text)
-  if (payload?.output?.text) return String(payload.output.text)
-  // 某些实现返回 tokens / words 列表
-  const words = payload?.result?.words || payload?.output?.words
-  if (Array.isArray(words)) {
-    return words.map((w: any) => (typeof w === 'string' ? w : w?.word || '')).join('') || null
+export function parseParaformerText(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null
+  const p = payload as Record<string, unknown>
+  // 1) 直接 text
+  if (typeof p.text === 'string') return p.text
+  // 2) payload.output.sentence.text（inference 协议常见）
+  const pl = typeof p.payload === 'object' && p.payload ? (p.payload as Record<string, unknown>) : undefined
+  const out = pl && typeof pl.output === 'object' && pl.output ? (pl.output as Record<string, unknown>) : undefined
+  const sentence = out && typeof out.sentence === 'object' && out.sentence ? (out.sentence as Record<string, unknown>) : undefined
+  if (sentence && typeof sentence.text === 'string') return sentence.text
+  // 3) result.text
+  const result = typeof p.result === 'object' && p.result ? (p.result as Record<string, unknown>) : undefined
+  if (result && typeof result.text === 'string') return result.text
+  // 4) words[]
+  const extractWords = (obj: unknown): string[] | null => {
+    if (!obj || typeof obj !== 'object') return null
+    const o = obj as Record<string, unknown>
+    const arr = o.words
+    if (!Array.isArray(arr)) return null
+    return arr.map((w: unknown) => {
+      if (typeof w === 'string') return w
+      if (w && typeof w === 'object' && 'word' in (w as Record<string, unknown>)) return String((w as Record<string, unknown>).word)
+      return ''
+    })
+  }
+  const wordsFromResult = extractWords(result)
+  const wordsFromOut = extractWords(out)
+  const merged = wordsFromResult || wordsFromOut
+  if (merged && merged.length) {
+    const s = merged.join('')
+    return s || null
   }
   return null
 }
