@@ -16,7 +16,8 @@ src/
 ├── api/                    # API 接口封装
 │   ├── auth.ts            # 认证相关 API
 │   ├── plan.ts            # 行程相关 API
-│   └── expense.ts         # 支出相关 API
+│   ├── expense.ts         # 支出相关 API
+│   └── paraformer.ts      # 百炼 Paraformer 实时识别 WS（推流、结果）
 ├── assets/                 # 静态资源
 │   ├── base.css           # 基础样式
 │   └── main.css           # 主样式
@@ -45,7 +46,8 @@ src/
 │   └── expense.ts         # 支出类型
 ├── utils/                  # 工具函数
 │   ├── supabase.ts        # Supabase 客户端
-│   └── validate.ts        # 验证函数
+│   ├── validate.ts        # 验证函数
+│   └── audio.ts           # 麦克风采集、16k 下采样、PCM 分片
 ├── views/                  # 页面组件
 │   ├── auth/              # 认证页面
 │   │   ├── LoginView.vue
@@ -73,6 +75,13 @@ VITE_BAILIAN_API_KEY=your_bailian_api_key
 VITE_BAILIAN_ASR_ENDPOINT=your_asr_endpoint
 VITE_BAILIAN_LLM_ENDPOINT=your_llm_endpoint
 VITE_BAILIAN_MODEL_NAME=qwen-max
+
+# 百炼 Paraformer 实时识别
+VITE_PF_API_KEY=your_dashscope_api_key_or_temp_token
+# 可选：覆盖默认端点
+# VITE_PF_ASR_WS=wss://dashscope.aliyuncs.com/api-ws/v1/paraformer
+# 可选：指定模型（默认 paraformer-realtime-v2）
+# VITE_PF_MODEL=paraformer-realtime-v2
 
 # 高德地图
 VITE_AMAP_KEY=your_amap_key

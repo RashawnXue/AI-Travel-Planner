@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '@/utils/supabase'
-import type { TravelPlan, PlanListItem } from '@/types/plan'
+import type { TravelPlan, PlanListItem, AIResponse } from '@/types/plan'
 import type { ApiResponse } from '@/types/api'
 
 /**
@@ -119,6 +119,69 @@ export async function deletePlan(planId: string): Promise<ApiResponse<null>> {
         message: error.message || '删除行程失败'
       }
     }
+  }
+}
+
+/**
+ * 基于 AI 解析结果创建行程
+ * @param ai AI 生成的行程数据
+ * @param userId 用户 ID（由调用方提前获取，避免长时间操作后 session 过期）
+ */
+export async function createPlanFromAI(
+  ai: AIResponse, 
+  userId: string
+): Promise<ApiResponse<{ id: string }>> {
+  try {
+    if (!userId) {
+      return {
+        data: null,
+        error: { message: '用户 ID 无效' }
+      }
+    }
+
+    // 如果没有出发日期，设置为当前日期后三天
+    let startDate: string
+    if (!ai.start_date || ai.start_date.trim() === '') {
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 3)
+      const isoDate = futureDate.toISOString().split('T')[0]
+      startDate = isoDate || ''
+    } else {
+      startDate = ai.start_date.trim()
+    }
+
+    const payload = {
+      user_id: userId,
+      title: ai.title?.trim() || '未命名行程',
+      destination: ai.destination?.trim() || '未知目的地',
+      days: ai.days || 1,
+      budget: ai.budget || 0,
+      travelers: ai.travelers || 1,
+      preferences: Array.isArray(ai.preferences) ? ai.preferences : [],
+      start_date: startDate,
+      summary: ai.summary?.trim() || '',
+      ai_response: ai
+    }
+
+    console.log('Inserting travel plan with payload:', payload)
+
+    const { data, error } = await supabase
+      .from('travel_plans')
+      .insert(payload)
+      .select('id')
+      .single()
+
+    if (error) {
+      return {
+        data: null,
+        error: { message: error.message, code: error.code }
+      }
+    }
+
+    return { data: { id: data.id as string }, error: null }
+  } catch (err) {
+    const error = err as Error
+    return { data: null, error: { message: error.message || '创建行程失败' } }
   }
 }
 

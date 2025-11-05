@@ -7,11 +7,51 @@ import 'ant-design-vue/dist/reset.css'
 
 import App from './App.vue'
 import router from './router'
+import { supabase } from '@/utils/supabase'
+import { useUserStore } from '@/stores/user'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 app.use(Antd)
 
-app.mount('#app')
+// 应用启动时：先等待 Supabase 完成初始会话恢复（INITIAL_SESSION），再进行首轮校验
+const userStore = useUserStore()
+
+const waitForInitialSession = new Promise<void>((resolve) => {
+  let resolved = false
+  const { data } = supabase.auth.onAuthStateChange((event) => {
+    if (event === 'INITIAL_SESSION' && !resolved) {
+      resolved = true
+      // 只为等待初始会话的临时订阅，完成后立即取消
+      data.subscription.unsubscribe()
+      resolve()
+    }
+  })
+  // 兜底超时，避免某些边缘情况下事件未触发导致卡住
+  setTimeout(() => {
+    if (!resolved) {
+      data.subscription.unsubscribe()
+      resolve()
+    }
+  }, 400)
+})
+
+waitForInitialSession
+  .catch(() => {})
+  .finally(async () => {
+    await userStore.checkAuth()
+
+    // 常驻订阅：后续事件变化时同步到 store
+    supabase.auth.onAuthStateChange(async (event) => {
+      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        await userStore.checkAuth()
+      } else if (event === 'SIGNED_OUT') {
+        userStore.clearUser()
+      }
+    })
+
+    app.mount('#app')
+  })

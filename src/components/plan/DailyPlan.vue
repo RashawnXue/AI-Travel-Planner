@@ -90,10 +90,11 @@
 </template>
 
 <script setup lang="ts">
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import type { DailyPlan, Activity, Accommodation } from '@/types/plan'
-import { createMap, addMarker, addPolyline, fitView } from '@/utils/amap'
+import { createMap, addMarker, addBezierCurve, fitView, createSmoothPath } from '@/utils/amap'
 
 interface Props {
   dailyPlans: DailyPlan[]
@@ -104,10 +105,10 @@ const props = defineProps<Props>()
 
 const currentDay = ref(0)
 const mapContainer = ref<HTMLElement>()
-const mapInstance = ref<AMap.Map | null>(null)
+const mapInstance = ref<any>(null)
 const mapLoading = ref(true)
-const markers = ref<AMap.Marker[]>([])
-const polylines = ref<AMap.Polyline[]>([])
+const markers = ref<any[]>([])
+const polylines = ref<any[]>([])
 
 // 当前天数的行程
 const currentDayPlans = computed(() => {
@@ -201,13 +202,15 @@ const renderDayRoute = async () => {
 
   // 1. 添加所有活动标记点
   for (let i = 0; i < validActivities.length; i++) {
-    const activity = validActivities[i]
+    const activity = validActivities[i]!
     let position: [number, number] = [activity.longitude!, activity.latitude!]
     
     // 检查是否有重复坐标，如果有则添加微小偏移
-    const hasDuplicate = validActivities.slice(0, i).some(
+    const duplicateIndex = validActivities.slice(0, i).findIndex(
       prev => prev.longitude === activity.longitude && prev.latitude === activity.latitude
     )
+    const hasDuplicate = duplicateIndex !== -1
+    
     if (hasDuplicate) {
       // 添加微小偏移（约50米），避免标记完全重叠
       position = [
@@ -220,9 +223,11 @@ const renderDayRoute = async () => {
     allPoints.push(position)
 
     // 创建活动标记内容（起点用绿色，其他用紫色数字）
+    // 如果有重复，添加特殊样式
     const markerContent = `
-      <div class="custom-marker ${i === 0 ? 'start' : 'middle'}">
+      <div class="custom-marker ${i === 0 ? 'start' : 'middle'} ${hasDuplicate ? 'overlapped' : ''}">
         <div class="marker-number">${i + 1}</div>
+        ${hasDuplicate ? '<div class="overlap-badge">!</div>' : ''}
       </div>
     `
 
@@ -393,28 +398,40 @@ const renderDayRoute = async () => {
     markers.value.push(hotelMarker)
   }
 
-  // 3. 绘制活动之间的路线（不包括到酒店的线）
+  // 3. 绘制活动之间的平滑曲线路线（不包括到酒店的线）
   if (activityPositions.length > 1) {
-    // 使用实际的标记位置（包含偏移）绘制路线
-    const polyline = await addPolyline(mapInstance.value, activityPositions)
-    polylines.value.push(polyline)
+    // 创建平滑的贝塞尔曲线路径
+    const smoothPath = createSmoothPath(activityPositions)
+    
+    // 一次性创建所有贝塞尔曲线段
+    const bezierCurve = await addBezierCurve(mapInstance.value, smoothPath, {
+      strokeColor: '#667eea',
+      strokeWeight: 6,
+      strokeOpacity: 0.8,
+      showDir: true // 显示方向箭头
+    })
+    polylines.value.push(bezierCurve)
   }
 
-  // 4. 如果有住宿，从最后一个活动到酒店画虚线
+  // 4. 如果有住宿，从最后一个活动到酒店画虚线贝塞尔曲线
   if (activityPositions.length > 0 && todayAccommodation?.longitude && todayAccommodation?.latitude) {
     // 使用最后一个活动的实际位置（包含偏移）
-    const lastActivityPosition = activityPositions[activityPositions.length - 1]
+    const lastActivityPosition = activityPositions[activityPositions.length - 1]!
     const pathToHotel = [
       lastActivityPosition,
       [todayAccommodation.longitude, todayAccommodation.latitude] as [number, number]
     ]
-
-    const dashedPolyline = await addPolyline(mapInstance.value, pathToHotel, {
+    
+    // 创建到酒店的平滑曲线
+    const smoothPathToHotel = createSmoothPath(pathToHotel)
+    
+    const dashedBezierCurve = await addBezierCurve(mapInstance.value, smoothPathToHotel, {
       strokeStyle: 'dashed',
       strokeColor: '#FF6F3C',
-      strokeWeight: 4
+      strokeWeight: 5,
+      strokeOpacity: 0.8
     })
-    polylines.value.push(dashedPolyline)
+    polylines.value.push(dashedBezierCurve)
   }
 
   // 5. 自适应显示所有点
@@ -438,7 +455,7 @@ const formatTime = (timeStr: string) => {
   
   // 处理 "09:0" 或 "9:00" 等格式
   const parts = timeStr.split(':')
-  if (parts.length === 2) {
+  if (parts.length === 2 && parts[0] && parts[1]) {
     const hours = parts[0].padStart(2, '0')
     const minutes = parts[1].padStart(2, '0')
     return `${hours}:${minutes}`
@@ -497,7 +514,7 @@ watch(currentDay, async () => {
 /* 地图容器 */
 .map-container {
   position: relative;
-  height: 400px;
+  height: 533px; /* 原来 400px，提升 1/3 (400 * 4/3 ≈ 533px) */
   margin-bottom: 24px;
   border-radius: 8px;
   overflow: hidden;
@@ -823,11 +840,67 @@ watch(currentDay, async () => {
   color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .custom-marker:hover {
   transform: scale(1.2);
+}
+
+/* 重叠标记的特殊样式 */
+.custom-marker.overlapped {
+  animation: pulse 2s infinite;
+  box-shadow: 
+    0 0 0 3px rgba(255, 193, 7, 0.3),
+    0 0 0 6px rgba(255, 193, 7, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid #ffc107;
+}
+
+.custom-marker.overlapped:hover {
+  animation: none;
+  transform: scale(1.3);
+}
+
+/* 重叠标记的警告徽章 */
+.overlap-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  background: #ff4d4f;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: bounce 1s infinite;
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* 弹跳动画 */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .custom-marker.start {
@@ -849,13 +922,12 @@ watch(currentDay, async () => {
 /* 信息窗体样式 */
 .info-window {
   min-width: 200px;
-  max-width: 300px;
-  max-height: 400px;
+  max-width: 320px;
   overflow: hidden;
 }
 
 .info-window-content {
-  max-height: 400px;
+  max-height: 450px; /* 固定最大高度，地图高度已提升 1/3 */
   overflow-y: auto;
   overflow-x: hidden;
   padding: 12px;

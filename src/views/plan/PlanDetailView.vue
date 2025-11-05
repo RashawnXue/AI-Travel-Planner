@@ -127,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import {
   Spin as ASpin,
@@ -259,24 +259,23 @@ const resetExpenseForm = () => {
 }
 
 // 监听planId变化
-watch(() => props.planId, () => {
-  if (props.planId) {
+watch(() => props.planId, (newId, oldId) => {
+  // 只有当 planId 真正变化时才重新加载
+  if (newId && newId !== oldId) {
     loadPlanDetail()
   }
 }, { immediate: true })
 
 // 监听Tab切换，加载支出记录
-watch(currentTab, async (newTab) => {
-  if (newTab === 3 && props.planId) {
+watch(currentTab, async (newTab, oldTab) => {
+  // 只有切换到费用预算tab时才加载，避免重复加载
+  if (newTab === 3 && oldTab !== 3 && props.planId) {
     await expenseStore.fetchExpenseList(props.planId)
   }
 })
 
-onMounted(() => {
-  if (props.planId) {
-    loadPlanDetail()
-  }
-})
+// 移除 onMounted，使用 watch immediate 已足够
+
 </script>
 
 <style scoped>
