@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
+import { supabase } from '@/utils/supabase'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -91,6 +92,16 @@ router.beforeEach(async (to, from, next) => {
         return
       }
       console.log('✅ Session restored, proceed to route')
+    } else {
+      // 即使已登录，也验证会话是否仍然有效
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        console.log('❌ Session expired, redirect to login')
+        message.warning('登录已过期，请重新登录')
+        userStore.clearUser()
+        next('/login')
+        return
+      }
     }
   }
   

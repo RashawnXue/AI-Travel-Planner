@@ -2,10 +2,12 @@
   <div class="plan-list-view">
     <AppHeader />
     
-    <!-- 装饰背景元素 -->
+    <!-- 装饰背景元素 - 增加更多颜色 -->
     <div class="decor-orb orb-1"></div>
     <div class="decor-orb orb-2"></div>
     <div class="decor-orb orb-3"></div>
+    <div class="decor-orb orb-4"></div>
+    <div class="decor-orb orb-5"></div>
     
     <div class="main-container">
       <!-- 展开按钮 -->
@@ -80,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, onActivated } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { usePlanStore } from '@/stores/plan'
@@ -105,6 +107,20 @@ const handleSelectPlan = (planId: string) => {
   // 更新URL，但不刷新页面
   router.push({ path: '/', query: { planId } })
 }
+
+// 监听路由变化，当从其他页面返回时重新加载行程列表
+watch(() => route.query.planId, async (newPlanId) => {
+  if (newPlanId && typeof newPlanId === 'string') {
+    // 重新加载行程列表以确保包含新创建的行程
+    await planStore.fetchPlanList()
+    currentPlanId.value = newPlanId
+  }
+}, { immediate: false }) // 不在初始化时执行，只在变化时执行
+
+// 当组件被激活时（从 keep-alive 缓存中恢复），重新加载数据
+onActivated(async () => {
+  await planStore.fetchPlanList()
+})
 
 onMounted(async () => {
   // 加载行程列表
@@ -143,12 +159,12 @@ onMounted(async () => {
   overflow-x: hidden;
 }
 
-/* 装饰背景球 */
+/* 装饰背景球 - 增加更多色彩 */
 .decor-orb {
   position: fixed;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.15;
+  opacity: 0.18;
   pointer-events: none;
   z-index: 0;
 }
@@ -156,7 +172,7 @@ onMounted(async () => {
 .orb-1 {
   width: 500px;
   height: 500px;
-  background: var(--gradient-ocean);
+  background: linear-gradient(135deg, #1e88e5 0%, #26c6da 100%);
   top: -100px;
   right: -100px;
   animation: float-orb 20s ease-in-out infinite;
@@ -165,19 +181,37 @@ onMounted(async () => {
 .orb-2 {
   width: 400px;
   height: 400px;
-  background: var(--gradient-tropical);
+  background: linear-gradient(135deg, #66bb6a 0%, #26a69a 100%);
   bottom: -100px;
   left: -100px;
   animation: float-orb 25s ease-in-out infinite reverse;
 }
 
 .orb-3 {
-  width: 300px;
-  height: 300px;
-  background: var(--gradient-sunset);
+  width: 350px;
+  height: 350px;
+  background: linear-gradient(135deg, #ff7043 0%, #ec407a 100%);
   top: 40%;
   right: 30%;
   animation: float-orb 30s ease-in-out infinite;
+}
+
+.orb-4 {
+  width: 450px;
+  height: 450px;
+  background: linear-gradient(135deg, #ab47bc 0%, #7e57c2 100%);
+  top: 15%;
+  left: 15%;
+  animation: float-orb 28s ease-in-out infinite;
+}
+
+.orb-5 {
+  width: 320px;
+  height: 320px;
+  background: linear-gradient(135deg, #ffa726 0%, #ffca28 100%);
+  bottom: 25%;
+  right: 15%;
+  animation: float-orb 22s ease-in-out infinite reverse;
 }
 
 @keyframes float-orb {
@@ -429,7 +463,7 @@ onMounted(async () => {
   line-height: 1;
 }
 
-/* 功能标签 */
+/* 功能标签 - 添加多彩效果 */
 .feature-tags {
   display: flex;
   gap: 10px;
@@ -443,19 +477,49 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(38, 198, 218, 0.1) 100%);
-  border: 1px solid rgba(30, 136, 229, 0.2);
   border-radius: 20px;
   font-size: 13px;
-  color: var(--travel-ocean-blue-dark);
   font-weight: 500;
   transition: all 0.3s;
 }
 
-.feature-tag:hover {
-  background: linear-gradient(135deg, rgba(30, 136, 229, 0.15) 0%, rgba(38, 198, 218, 0.15) 100%);
-  border-color: rgba(30, 136, 229, 0.3);
+.feature-tag:nth-child(1) {
+  background: linear-gradient(135deg, rgba(30, 136, 229, 0.12) 0%, rgba(38, 198, 218, 0.12) 100%);
+  border: 1px solid rgba(30, 136, 229, 0.25);
+  color: #1e88e5;
+}
+
+.feature-tag:nth-child(2) {
+  background: linear-gradient(135deg, rgba(102, 187, 106, 0.12) 0%, rgba(38, 166, 154, 0.12) 100%);
+  border: 1px solid rgba(102, 187, 106, 0.25);
+  color: #43a047;
+}
+
+.feature-tag:nth-child(3) {
+  background: linear-gradient(135deg, rgba(255, 167, 38, 0.12) 0%, rgba(255, 202, 40, 0.12) 100%);
+  border: 1px solid rgba(255, 167, 38, 0.25);
+  color: #fb8c00;
+}
+
+.feature-tag:nth-child(1):hover {
+  background: linear-gradient(135deg, rgba(30, 136, 229, 0.18) 0%, rgba(38, 198, 218, 0.18) 100%);
+  border-color: rgba(30, 136, 229, 0.35);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 136, 229, 0.2);
+}
+
+.feature-tag:nth-child(2):hover {
+  background: linear-gradient(135deg, rgba(102, 187, 106, 0.18) 0%, rgba(38, 166, 154, 0.18) 100%);
+  border-color: rgba(102, 187, 106, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 187, 106, 0.2);
+}
+
+.feature-tag:nth-child(3):hover {
+  background: linear-gradient(135deg, rgba(255, 167, 38, 0.18) 0%, rgba(255, 202, 40, 0.18) 100%);
+  border-color: rgba(255, 167, 38, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 167, 38, 0.2);
 }
 
 @media (max-width: 768px) {

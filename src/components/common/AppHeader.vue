@@ -6,6 +6,7 @@
       <nav class="header-nav">
         <router-link to="/" class="nav-link" active-class="active">我的行程</router-link>
         <router-link to="/create" class="nav-link" active-class="active">创建行程</router-link>
+        <router-link to="/profile" class="nav-link" active-class="active">个人中心</router-link>
       </nav>
     </div>
     <div class="header-right">

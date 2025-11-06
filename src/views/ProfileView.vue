@@ -2,10 +2,12 @@
   <div class="profile-view">
     <AppHeader />
     
-    <!-- 装饰背景元素 -->
+    <!-- 装饰背景元素 - 增加更多颜色 -->
     <div class="decor-orb orb-1"></div>
     <div class="decor-orb orb-2"></div>
     <div class="decor-orb orb-3"></div>
+    <div class="decor-orb orb-4"></div>
+    <div class="decor-orb orb-5"></div>
 
     <div class="main-container">
       <div class="page-card">
@@ -261,12 +263,12 @@ const handleChangePassword = async () => {
   overflow-y: auto;
 }
 
-/* 装饰背景球 */
+/* 装饰背景球 - 增加更多色彩 */
 .decor-orb {
   position: fixed;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.15;
+  opacity: 0.18;
   pointer-events: none;
   z-index: 0;
 }
@@ -274,7 +276,7 @@ const handleChangePassword = async () => {
 .orb-1 {
   width: 500px;
   height: 500px;
-  background: var(--gradient-ocean);
+  background: linear-gradient(135deg, #1e88e5 0%, #26c6da 100%);
   top: -100px;
   right: -100px;
   animation: float-orb 20s ease-in-out infinite;
@@ -283,19 +285,37 @@ const handleChangePassword = async () => {
 .orb-2 {
   width: 400px;
   height: 400px;
-  background: var(--gradient-tropical);
+  background: linear-gradient(135deg, #66bb6a 0%, #26a69a 100%);
   bottom: -100px;
   left: -100px;
   animation: float-orb 25s ease-in-out infinite reverse;
 }
 
 .orb-3 {
-  width: 300px;
-  height: 300px;
-  background: var(--gradient-sunset);
+  width: 350px;
+  height: 350px;
+  background: linear-gradient(135deg, #ff7043 0%, #ec407a 100%);
   top: 40%;
   left: 30%;
   animation: float-orb 30s ease-in-out infinite;
+}
+
+.orb-4 {
+  width: 450px;
+  height: 450px;
+  background: linear-gradient(135deg, #ab47bc 0%, #7e57c2 100%);
+  top: 20%;
+  right: 25%;
+  animation: float-orb 28s ease-in-out infinite;
+}
+
+.orb-5 {
+  width: 320px;
+  height: 320px;
+  background: linear-gradient(135deg, #ffa726 0%, #ffca28 100%);
+  bottom: 30%;
+  right: 10%;
+  animation: float-orb 22s ease-in-out infinite reverse;
 }
 
 @keyframes float-orb {

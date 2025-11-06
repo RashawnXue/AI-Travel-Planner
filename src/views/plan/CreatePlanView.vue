@@ -662,8 +662,17 @@ async function generatePlan() {
     await new Promise(resolve => setTimeout(resolve, 500)) // 显示完成状态
     
     message.success('行程生成并保存成功！')
+    
+    // 清理状态
+    clearInterval(progressInterval)
+    isGenerating.value = false
+    generateProgress.value = 0
+    
+    // 等待一下确保状态更新完成
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
     // 返回首页并展示新创建的行程
-    router.push({ path: '/', query: { planId: createRes.data.id } })
+    await router.push({ path: '/', query: { planId: createRes.data.id } })
   } catch (err) {
     const e = err as Error
     message.error(e.message || '生成行程失败')

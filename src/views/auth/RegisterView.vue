@@ -1,9 +1,11 @@
 <template>
   <div class="register-page">
-    <!-- 装饰背景元素 -->
+    <!-- 装饰背景元素 - 增加更多颜色 -->
     <div class="decor-orb orb-1"></div>
     <div class="decor-orb orb-2"></div>
     <div class="decor-orb orb-3"></div>
+    <div class="decor-orb orb-4"></div>
+    <div class="decor-orb orb-5"></div>
     
     <div class="register-container">
       <div class="logo"><img class="logo-img" src="/icon.svg" alt="logo" /></div>
@@ -208,12 +210,12 @@ const handleSubmit = async () => {
   overflow-x: hidden;
 }
 
-/* 装饰背景球 */
+/* 装饰背景球 - 增加更多色彩 */
 .decor-orb {
   position: fixed;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.15;
+  opacity: 0.18;
   pointer-events: none;
   z-index: 0;
 }
@@ -221,7 +223,7 @@ const handleSubmit = async () => {
 .orb-1 {
   width: 500px;
   height: 500px;
-  background: var(--gradient-ocean);
+  background: linear-gradient(135deg, #1e88e5 0%, #26c6da 100%);
   top: -100px;
   right: -100px;
   animation: float-orb 20s ease-in-out infinite;
@@ -230,7 +232,7 @@ const handleSubmit = async () => {
 .orb-2 {
   width: 400px;
   height: 400px;
-  background: var(--gradient-tropical);
+  background: linear-gradient(135deg, #66bb6a 0%, #26a69a 100%);
   bottom: -100px;
   left: -100px;
   animation: float-orb 25s ease-in-out infinite reverse;
@@ -239,11 +241,29 @@ const handleSubmit = async () => {
 .orb-3 {
   width: 300px;
   height: 300px;
-  background: var(--gradient-sunset);
+  background: linear-gradient(135deg, #ff7043 0%, #ec407a 100%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   animation: float-orb 30s ease-in-out infinite;
+}
+
+.orb-4 {
+  width: 450px;
+  height: 450px;
+  background: linear-gradient(135deg, #ab47bc 0%, #7e57c2 100%);
+  top: 15%;
+  left: 15%;
+  animation: float-orb 28s ease-in-out infinite;
+}
+
+.orb-5 {
+  width: 320px;
+  height: 320px;
+  background: linear-gradient(135deg, #ffa726 0%, #ffca28 100%);
+  bottom: 25%;
+  right: 15%;
+  animation: float-orb 22s ease-in-out infinite reverse;
 }
 
 @keyframes float-orb {
