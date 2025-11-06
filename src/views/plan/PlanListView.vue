@@ -290,6 +290,9 @@ onMounted(async () => {
 }
 
 .welcome-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 28px;
   animation: float 3s ease-in-out infinite;
   filter: drop-shadow(0 6px 12px rgba(30, 136, 229, 0.25));
