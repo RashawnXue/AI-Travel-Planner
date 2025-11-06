@@ -6,8 +6,14 @@
  */
 
 import OSS from 'ali-oss'
+import { useUserStore } from '@/stores/user'
 
-const API_KEY = import.meta.env.VITE_PF_API_KEY || ''
+// 获取 API Key（优先使用用户配置的，否则使用环境变量）
+function getApiKey(): string {
+  const userStore = useUserStore()
+  return userStore.apiKey || import.meta.env.VITE_PF_API_KEY || ''
+}
+
 const SUBMIT_URL = '/api/dashscope/api/v1/services/audio/asr/transcription'
 const QUERY_URL_BASE = '/api/dashscope/api/v1/tasks'
 
@@ -78,10 +84,11 @@ async function deleteFromOSS(fileUrl: string): Promise<void> {
  * 提交录音文件识别任务
  */
 async function submitAsrTask(fileUrl: string): Promise<string> {
+  const apiKey = getApiKey()
   const response = await fetch(SUBMIT_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'X-DashScope-Async': 'enable',
       'X-DashScope-OssResourceResolve': 'enable'
@@ -119,10 +126,11 @@ async function queryAsrTask(taskId: string): Promise<{
     }>
   }
 }> {
+  const apiKey = getApiKey()
   const response = await fetch(`${QUERY_URL_BASE}/${taskId}`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${API_KEY}`
+      'Authorization': `Bearer ${apiKey}`
     }
   })
 

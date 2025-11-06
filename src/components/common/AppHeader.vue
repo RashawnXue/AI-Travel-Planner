@@ -111,7 +111,7 @@ const toggleDropdown = () => {
 
 const goToProfile = () => {
   showDropdown.value = false
-  message.info('个人中心功能即将开放')
+  router.push('/profile')
 }
 
 const handleLogout = () => {

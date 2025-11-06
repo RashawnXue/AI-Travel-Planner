@@ -368,16 +368,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { invokeBailianApp, extractBailianText, parsePlanJsonFromText } from '@/api/ai'
 import { createWavRecorder } from '@/utils/audio'
 import { recognizeAudioBlob } from '@/api/asr'
 import { createPlanFromAI } from '@/api/plan'
 import { supabase } from '@/utils/supabase'
+import { useUserStore } from '@/stores/user'
 import type { AIResponse } from '@/types/plan'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // Tab 切换
 const activeTab = ref<'voice' | 'text'>('text')
@@ -522,6 +524,20 @@ async function stopRecording() {
 }
 
 const toggleRecording = () => {
+  // 检查 API Key
+  if (!userStore.hasApiKey) {
+    Modal.confirm({
+      title: '需要配置 API 密钥',
+      content: '使用语音识别功能需要先配置百炼 API 密钥，是否现在前往配置？',
+      okText: '去配置',
+      cancelText: '取消',
+      onOk() {
+        message.info('请点击顶部导航栏右侧的 "配置API密钥" 按钮')
+      }
+    })
+    return
+  }
+  
   if (!isRecording.value) {
     startRecording()
   } else {
@@ -568,6 +584,21 @@ const togglePreference = (preference: string) => {
  */
 async function generatePlan() {
   if (!canGenerate.value) return
+  
+  // 检查 API Key
+  if (!userStore.hasApiKey) {
+    Modal.confirm({
+      title: '需要配置 API 密钥',
+      content: '使用 AI 生成行程需要先配置百炼 API 密钥，是否现在前往配置？',
+      okText: '去配置',
+      cancelText: '取消',
+      onOk() {
+        // 触发 header 中的 API key 配置弹窗
+        message.info('请点击顶部导航栏右侧的 "配置API密钥" 按钮')
+      }
+    })
+    return
+  }
 
   isGenerating.value = true
   const progressInterval = startProgress()

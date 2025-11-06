@@ -179,6 +179,7 @@ import {
 } from 'ant-design-vue'
 import { usePlanStore } from '@/stores/plan'
 import { useExpenseStore } from '@/stores/expense'
+import { useUserStore } from '@/stores/user'
 import type { ExpenseForm, ExpenseCategory } from '@/types/expense'
 import { createWavRecorder } from '@/utils/audio'
 import { recognizeAudioBlob } from '@/api/asr'
@@ -197,6 +198,7 @@ const props = defineProps<Props>()
 
 const planStore = usePlanStore()
 const expenseStore = useExpenseStore()
+const userStore = useUserStore()
 
 const loading = ref(false)
 const currentTab = ref(0)
@@ -251,6 +253,20 @@ const parseVoiceExpense = (text: string): { category?: ExpenseCategory; amount?:
 
 // 切换录音状态
 const toggleRecording = async () => {
+  // 检查 API Key
+  if (!userStore.hasApiKey) {
+    Modal.confirm({
+      title: '需要配置 API 密钥',
+      content: '使用语音识别功能需要先配置百炼 API 密钥，是否现在前往配置？',
+      okText: '去配置',
+      cancelText: '取消',
+      onOk() {
+        message.info('请点击顶部导航栏右侧的 "配置API密钥" 按钮')
+      }
+    })
+    return
+  }
+  
   if (isRecording.value) {
     // 停止录音
     isRecording.value = false

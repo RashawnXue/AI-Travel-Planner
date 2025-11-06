@@ -12,13 +12,26 @@ export const useUserStore = defineStore('user', () => {
   const id = ref<string | null>(null)
   const email = ref<string | null>(null)
   const username = ref<string | null>(null)
+  const apiKey = ref<string | null>(null)
   
   // 添加一个标记，避免重复检查
   const isChecking = ref(false)
   const lastCheckTime = ref<number>(0)
+  
+  // 从 localStorage 加载 API Key
+  const loadApiKey = () => {
+    const savedKey = localStorage.getItem('bailian_api_key')
+    if (savedKey) {
+      apiKey.value = savedKey
+    }
+  }
+  
+  // 初始化时加载 API Key
+  loadApiKey()
 
   // 计算属性
   const isLoggedIn = computed(() => !!id.value)
+  const hasApiKey = computed(() => !!apiKey.value && apiKey.value.trim().length > 0)
 
   const userState = computed<UserState>(() => ({
     id: id.value,
@@ -38,6 +51,16 @@ export const useUserStore = defineStore('user', () => {
     id.value = null
     email.value = null
     username.value = null
+  }
+  
+  const setApiKey = (key: string) => {
+    apiKey.value = key
+    localStorage.setItem('bailian_api_key', key)
+  }
+  
+  const clearApiKey = () => {
+    apiKey.value = null
+    localStorage.removeItem('bailian_api_key')
   }
 
   const checkAuth = async () => {
@@ -84,12 +107,16 @@ export const useUserStore = defineStore('user', () => {
     id,
     email,
     username,
+    apiKey,
     // 计算属性
     isLoggedIn,
+    hasApiKey,
     userState,
     // 方法
     setUser,
     clearUser,
+    setApiKey,
+    clearApiKey,
     checkAuth
   }
 })
