@@ -62,6 +62,7 @@
       :width="600"
       ok-text="确认"
       cancel-text="取消"
+      :confirm-loading="isSubmittingExpense"
       @ok="handleExpenseSubmit"
       @cancel="resetExpenseForm"
     >
@@ -207,6 +208,7 @@ const tabs = ['每日行程', '住宿安排', '交通信息', '费用预算']
 const plan = ref(planStore.currentPlan)
 
 const showExpenseModal = ref(false)
+const isSubmittingExpense = ref(false)
 const expenseForm = ref<ExpenseForm>({
   category: '餐饮',
   amount: 0,
@@ -369,14 +371,19 @@ const handleExpenseSubmit = async () => {
     return
   }
 
-  const success = await expenseStore.createExpense(props.planId, expenseForm.value)
-  
-  if (success) {
-    message.success('支出记录已添加')
-    showExpenseModal.value = false
-    resetExpenseForm()
-  } else {
-    message.error('添加失败，请重试')
+  isSubmittingExpense.value = true
+  try {
+    const success = await expenseStore.createExpense(props.planId, expenseForm.value)
+    
+    if (success) {
+      message.success('支出记录已添加')
+      showExpenseModal.value = false
+      resetExpenseForm()
+    } else {
+      message.error('添加失败，请重试')
+    }
+  } finally {
+    isSubmittingExpense.value = false
   }
 }
 

@@ -382,7 +382,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 // Tab 切换
-const activeTab = ref<'voice' | 'text'>('text')
+const activeTab = ref<'voice' | 'text'>('voice')
 
 // 语音输入相关
 const isRecording = ref(false)
