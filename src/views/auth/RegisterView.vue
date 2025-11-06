@@ -1,7 +1,7 @@
 <template>
   <div class="register-page">
     <div class="register-container">
-      <div class="logo">✈️</div>
+      <div class="logo"><img class="logo-img" src="/icon.svg" alt="logo" /></div>
       <h1>注册 AI 旅行规划师</h1>
 
       <a-form
@@ -219,9 +219,14 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
   color: white;
   box-shadow: 0 4px 20px rgba(30, 136, 229, 0.3);
+}
+
+.logo-img {
+  width: 40px;
+  height: 40px;
+  display: block;
 }
 
 h1 {

@@ -37,7 +37,7 @@
           </div>
           
           <div class="welcome-card">
-            <div class="welcome-icon">✈️</div>
+            <div class="welcome-icon"><img class="welcome-icon-img" src="/icon.svg" alt="logo" /></div>
             <h2 class="welcome-title">欢迎使用 AI 旅行规划师</h2>
             <p class="welcome-desc">让 AI 帮您规划完美的旅行，开始探索世界吧！</p>
             <router-link to="/create" class="create-plan-btn">
@@ -290,10 +290,15 @@ onMounted(async () => {
 }
 
 .welcome-icon {
-  font-size: 100px;
   margin-bottom: 28px;
   animation: float 3s ease-in-out infinite;
   filter: drop-shadow(0 6px 12px rgba(30, 136, 229, 0.25));
+}
+
+.welcome-icon-img {
+  width: 100px;
+  height: 100px;
+  display: block;
 }
 
 @keyframes float {
@@ -421,9 +426,7 @@ onMounted(async () => {
     border-radius: 20px;
   }
   
-  .welcome-icon {
-    font-size: 80px;
-  }
+  .welcome-icon-img { width: 80px; height: 80px; }
 
   .welcome-title {
     font-size: 24px;
