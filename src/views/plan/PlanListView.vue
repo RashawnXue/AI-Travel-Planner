@@ -2,6 +2,11 @@
   <div class="plan-list-view">
     <AppHeader />
     
+    <!-- 装饰背景元素 -->
+    <div class="decor-orb orb-1"></div>
+    <div class="decor-orb orb-2"></div>
+    <div class="decor-orb orb-3"></div>
+    
     <div class="main-container">
       <!-- 展开按钮 -->
       <div class="expand-btn" :class="{ show: sidebarCollapsed }" @click="toggleSidebar">▶</div>
@@ -133,7 +138,58 @@ onMounted(async () => {
 <style scoped>
 .plan-list-view {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 装饰背景球 */
+.decor-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: var(--gradient-ocean);
+  top: -100px;
+  right: -100px;
+  animation: float-orb 20s ease-in-out infinite;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: var(--gradient-tropical);
+  bottom: -100px;
+  left: -100px;
+  animation: float-orb 25s ease-in-out infinite reverse;
+}
+
+.orb-3 {
+  width: 300px;
+  height: 300px;
+  background: var(--gradient-sunset);
+  top: 40%;
+  right: 30%;
+  animation: float-orb 30s ease-in-out infinite;
+}
+
+@keyframes float-orb {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(50px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 30px) scale(0.9);
+  }
 }
 
 .main-container {
@@ -188,7 +244,7 @@ onMounted(async () => {
 
 /* 欢迎页面背景 */
 .content-area.welcome-bg {
-  background: var(--gradient-adventure) !important;
+  background: transparent !important;
   position: fixed;
   display: flex;
   align-items: center;
@@ -197,16 +253,7 @@ onMounted(async () => {
 }
 
 .content-area.welcome-bg::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
-  pointer-events: none;
+  display: none;
 }
 
 .empty-text {
