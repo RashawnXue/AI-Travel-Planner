@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
-import { supabase } from '@/utils/supabase'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -80,7 +79,7 @@ router.beforeEach(async (to, from, next) => {
   
   // 如果需要登录，先检查认证状态
   if (requiresAuth) {
-    // 如果 store 中没有用户信息，尝试从 Supabase 恢复会话
+    // 如果 store 中没有用户信息，尝试通过后端 API 验证会话
     if (!userStore.isLoggedIn) {
       console.log('🔍 Not logged in, checking session...')
       const isAuthenticated = await userStore.checkAuth()
@@ -92,17 +91,9 @@ router.beforeEach(async (to, from, next) => {
         return
       }
       console.log('✅ Session restored, proceed to route')
-    } else {
-      // 即使已登录，也验证会话是否仍然有效
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        console.log('❌ Session expired, redirect to login')
-        message.warning('登录已过期，请重新登录')
-        userStore.clearUser()
-        next('/login')
-        return
-      }
     }
+    // 如果已经登录，信任 userStore 的状态，不再重复检查
+    // checkAuth() 内部已经有缓存机制（5秒内不重复请求）
   }
   
   next()

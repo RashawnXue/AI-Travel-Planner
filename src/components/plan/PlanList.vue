@@ -56,6 +56,7 @@ defineProps<Props>()
 const emit = defineEmits<{
   toggle: []
   selectPlan: [planId: string]
+  planDeleted: []  // 新增：行程删除后的事件
 }>()
 
 const router = useRouter()
@@ -99,7 +100,7 @@ const showContextMenu = (planId: string) => {
   })
 }
 
-const handleDelete = (planId: string) => {
+const handleDelete = async (planId: string) => {
   const plan = planStore.planList.find(p => p.id === planId)
   if (!plan) return
   
@@ -113,6 +114,8 @@ const handleDelete = (planId: string) => {
       const success = await planStore.removePlan(planId)
       if (success) {
         message.success('已删除行程')
+        // 通知父组件行程已删除，让父组件处理跳转逻辑
+        emit('planDeleted')
       } else {
         message.error('删除失败，请重试')
       }

@@ -370,13 +370,10 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import AppHeader from '@/components/common/AppHeader.vue'
-import { invokeBailianApp, extractBailianText, parsePlanJsonFromText } from '@/api/ai'
+import { generateAndCreatePlan } from '@/api/ai'
 import { createWavRecorder } from '@/utils/audio'
 import { recognizeAudioBlob } from '@/api/asr'
-import { createPlanFromAI } from '@/api/plan'
-import { supabase } from '@/utils/supabase'
 import { useUserStore } from '@/stores/user'
-import type { AIResponse } from '@/types/plan'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -467,9 +464,10 @@ async function startRecording() {
   recognizedText.value = ''
   recordedBlob = null
 
-  if (!import.meta.env.VITE_PF_API_KEY) {
-    message.error('语音配置缺失：请在 .env 配置 VITE_PF_API_KEY 后重启服务')
-    console.error('[ASR] Missing env var: VITE_PF_API_KEY')
+  // 检查用户是否配置了 API Key
+  if (!userStore.apiKey) {
+    message.error('请先在顶部导航栏配置 API 密钥')
+    console.error('[ASR] Missing API Key in userStore')
     return
   }
 
@@ -602,20 +600,14 @@ async function generatePlan() {
 
   isGenerating.value = true
   const progressInterval = startProgress()
-  let userId: string | null = null
 
   try {
-    // 1. 首先检查用户是否已登录并立即获取 user_id
-    const { data: userSession, error: userError } = await supabase.auth.getSession()
-
-    if (userError || !userSession?.session?.user?.id) {
+    // 1. 首先检查用户是否已登录
+    if (!userStore.isLoggedIn || !userStore.id) {
       message.error('请先登录后再生成行程')
-      router.push('/auth/login')
+      router.push('/login')
       return
     }
-
-    // 立即保存用户 ID，后续使用此 ID 而不是重新获取
-    userId = userSession.session.user.id
 
     const userPrompt = activeTab.value === 'voice' ? recognizedText.value : textInput.value
 
@@ -631,31 +623,11 @@ async function generatePlan() {
 
     const prompt = promptParts.join('\n')
 
-    const res = await invokeBailianApp({ prompt })
+    // 调用新的一体化接口：AI 生成 + 数据库插入
+    const res = await generateAndCreatePlan({ prompt })
 
     if (res.error || !res.data) {
-      throw new Error(res.error?.message || '调用 AI 接口失败')
-    }
-
-    // 从返回中提取文本并尝试解析为 JSON
-    const raw = res.data
-    const text = extractBailianText(raw) ?? (typeof raw === 'string' ? raw : JSON.stringify(raw))
-
-    const aiObj = parsePlanJsonFromText<AIResponse>(text)
-    if (!aiObj) {
-      console.error('AI 返回的内容无法解析为 JSON:', text)
-      message.warning({
-        content: '出现了点小差错，请您重试一下，下次一定成功！ 🙏',
-        duration: 3
-      })
-      return // 直接返回，不抛出错误，保持表单状态以便重试
-    }
-
-    // 使用之前保存的 userId 而不是重新获取
-    const createRes = await createPlanFromAI(aiObj, userId)
-
-    if (createRes.error || !createRes.data) {
-      throw new Error(createRes.error?.message || '持久化行程失败')
+      throw new Error(res.error?.message || '生成行程失败')
     }
 
     completeProgress()
@@ -672,7 +644,7 @@ async function generatePlan() {
     await new Promise(resolve => setTimeout(resolve, 100))
     
     // 返回首页并展示新创建的行程
-    await router.push({ path: '/', query: { planId: createRes.data.id } })
+    await router.push({ path: '/', query: { planId: res.data.id } })
   } catch (err) {
     const e = err as Error
     message.error(e.message || '生成行程失败')
