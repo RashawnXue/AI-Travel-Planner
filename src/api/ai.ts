@@ -1,9 +1,11 @@
 /**
  * AI 应用（阿里云百炼 DashScope App）相关 API 封装
+ * 现在通过后端代理调用
  */
 
 import type { ApiResponse } from '@/types/api'
 import { useUserStore } from '@/stores/user'
+import { getStoredToken } from './auth'
 
 export interface BailianCompletionInput {
   prompt: string
@@ -38,11 +40,7 @@ export function parsePlanJsonFromText<T = unknown>(text: string): T | null {
 
 /**
  * 调用百炼 DashScope App 的 completion 能力
- * 对应 curl:
- * curl -X POST https://dashscope.aliyuncs.com/api/v1/apps/{APP_ID}/completion \
- *  --header "Authorization: Bearer $DASHSCOPE_API_KEY" \
- *  --header 'Content-Type: application/json' \
- *  --data '{"input":{"prompt":"..."},"parameters":{},"debug":{}}'
+ * 通过后端 API 代理调用
  */
 export async function invokeBailianApp(
   input: BailianCompletionInput,
@@ -50,20 +48,19 @@ export async function invokeBailianApp(
 ): Promise<ApiResponse<unknown>> {
   try {
     const userStore = useUserStore()
-    const appId = import.meta.env.VITE_BAILIAN_APP_ID as string | undefined
-    // 优先使用用户配置的 API Key，如果没有则使用环境变量
-    const apiKey = userStore.apiKey || import.meta.env.VITE_BAILIAN_API_KEY as string | undefined
+    const apiKey = userStore.apiKey || undefined
 
-    if (!appId || !apiKey) {
+    if (!apiKey) {
       return {
         data: null,
         error: {
-          message: appId ? '请先在顶部导航栏配置 API 密钥' : '缺少百炼配置：VITE_BAILIAN_APP_ID 未设置',
+          message: '请先在顶部导航栏配置 API 密钥',
         }
       }
     }
 
-    const endpoint = `https://dashscope.aliyuncs.com/api/v1/apps/${encodeURIComponent(appId)}/completion`
+    // 调用后端 API
+    const endpoint = '/api/backend/ai/completion'
 
     // 创建 AbortController 用于超时控制
     const controller = new AbortController()
@@ -73,11 +70,11 @@ export async function invokeBailianApp(
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          input: { prompt: input.prompt },
+          prompt: input.prompt,
+          api_key: apiKey,
           parameters: options.parameters ?? {},
           debug: options.debug ?? {}
         }),
@@ -128,6 +125,117 @@ export async function invokeBailianApp(
       data: null,
       error: {
         message: error.message || '请求百炼接口异常'
+      }
+    }
+  }
+}
+
+/**
+ * 生成行程并直接保存到数据库
+ * 一步完成：AI 生成 + 数据库插入
+ */
+export async function generateAndCreatePlan(
+  input: BailianCompletionInput,
+  options: BailianCompletionOptions = {}
+): Promise<ApiResponse<{ id: string }>> {
+  try {
+    const userStore = useUserStore()
+    const apiKey = userStore.apiKey || undefined
+    const token = getStoredToken()
+
+    if (!apiKey) {
+      return {
+        data: null,
+        error: {
+          message: '请先在顶部导航栏配置 API 密钥',
+        }
+      }
+    }
+
+    if (!token) {
+      return {
+        data: null,
+        error: {
+          message: '请先登录',
+        }
+      }
+    }
+
+    // 调用后端 API
+    const endpoint = '/api/backend/ai/generate-plan'
+
+    // 创建 AbortController 用于超时控制
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 分钟超时
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          prompt: input.prompt,
+          api_key: apiKey,
+          parameters: options.parameters ?? {}
+        }),
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+
+      const data = await res.json()
+
+      if (!res.ok || data.error) {
+        return {
+          data: null,
+          error: {
+            message: data.error?.message || '生成行程失败',
+            status: res.status
+          }
+        }
+      }
+
+      if (!data.plan_id) {
+        return {
+          data: null,
+          error: {
+            message: '生成行程失败，未返回行程 ID'
+          }
+        }
+      }
+
+      return {
+        data: { id: data.plan_id },
+        error: null
+      }
+    } catch (fetchErr) {
+      clearTimeout(timeoutId)
+      const error = fetchErr as Error
+      
+      if (error.name === 'AbortError') {
+        return {
+          data: null,
+          error: {
+            message: 'AI 生成超时（超过5分钟），请稍后重试或简化需求'
+          }
+        }
+      }
+      
+      return {
+        data: null,
+        error: {
+          message: error.message || '生成行程失败'
+        }
+      }
+    }
+  } catch (err) {
+    const error = err as Error
+    return {
+      data: null,
+      error: {
+        message: error.message || '生成行程失败'
       }
     }
   }

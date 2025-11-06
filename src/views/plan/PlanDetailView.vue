@@ -379,6 +379,8 @@ const handleExpenseSubmit = async () => {
       message.success('支出记录已添加')
       showExpenseModal.value = false
       resetExpenseForm()
+      // 重新加载支出列表，确保数据同步
+      await expenseStore.fetchExpenseList(props.planId)
     } else {
       message.error('添加失败，请重试')
     }
@@ -398,6 +400,8 @@ const handleDeleteExpense = (expenseId: string) => {
       const success = await expenseStore.removeExpense(expenseId)
       if (success) {
         message.success('已删除支出记录')
+        // 重新加载支出列表，确保数据同步
+        await expenseStore.fetchExpenseList(props.planId)
       } else {
         message.error('删除失败，请重试')
       }
@@ -422,6 +426,8 @@ const resetExpenseForm = () => {
 watch(() => props.planId, (newId, oldId) => {
   // 只有当 planId 真正变化时才重新加载
   if (newId && newId !== oldId) {
+    // 切换回每日行程标签
+    currentTab.value = 0
     loadPlanDetail()
   }
 }, { immediate: true })

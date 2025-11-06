@@ -29,9 +29,9 @@
               <div class="stat-label">创建的行程</div>
             </div>
             <div class="stat-item">
-              <div class="stat-icon">💰</div>
-              <div class="stat-value">{{ expenseStore.expenseList.length }}</div>
-              <div class="stat-label">支出记录</div>
+              <div class="stat-icon">✓</div>
+              <div class="stat-value">{{ userStore.email ? '已认证' : '未认证' }}</div>
+              <div class="stat-label">账户状态</div>
             </div>
             <div class="stat-item">
               <div class="stat-icon">🔑</div>
@@ -174,12 +174,9 @@ import { message, Form as AForm, FormItem as AFormItem, InputPassword as AInputP
 import AppHeader from '@/components/common/AppHeader.vue'
 import { useUserStore } from '@/stores/user'
 import { usePlanStore } from '@/stores/plan'
-import { useExpenseStore } from '@/stores/expense'
-import { supabase } from '@/utils/supabase'
 
 const userStore = useUserStore()
 const planStore = usePlanStore()
-const expenseStore = useExpenseStore()
 
 // 加载数据
 onMounted(async () => {
@@ -213,24 +210,30 @@ const handleChangePassword = async () => {
   isChangingPassword.value = true
   
   try {
-    // 先验证当前密码（通过尝试重新登录）
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: userStore.email!,
-      password: passwordForm.value.currentPassword
-    })
+    // 调用后端 API 更新密码
+    const token = localStorage.getItem('auth_token')
     
-    if (signInError) {
-      message.error('当前密码不正确')
+    if (!token) {
+      message.error('请先登录')
       return
     }
     
-    // 更新密码
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: passwordForm.value.newPassword
+    const response = await fetch('/api/backend/auth/password', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        new_password: passwordForm.value.newPassword
+      })
     })
     
-    if (updateError) {
-      throw updateError
+    const result = await response.json()
+    
+    if (result.error) {
+      message.error(result.error.message || '密码修改失败')
+      return
     }
     
     message.success('密码修改成功！')

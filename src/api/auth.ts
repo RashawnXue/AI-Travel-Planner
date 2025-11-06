@@ -1,10 +1,69 @@
 /**
  * 认证相关 API
+ * 现在通过后端 API 处理，不再直接调用 Supabase
  */
 
-import { supabase } from '@/utils/supabase'
 import type { ApiResponse } from '@/types/api'
 import type { User, LoginForm, RegisterForm } from '@/types/user'
+
+const API_BASE = '/api/backend/auth'
+
+// Session token 存储
+const TOKEN_KEY = 'auth_token'
+const REFRESH_TOKEN_KEY = 'refresh_token'
+const USER_KEY = 'user_data'
+
+/**
+ * 获取存储的 token
+ */
+export const getStoredToken = (): string | null => {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+/**
+ * 获取存储的 refresh token
+ */
+export const getStoredRefreshToken = (): string | null => {
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+/**
+ * 存储 token
+ */
+const storeToken = (accessToken: string, refreshToken: string) => {
+  localStorage.setItem(TOKEN_KEY, accessToken)
+  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+}
+
+/**
+ * 存储用户数据
+ */
+const storeUser = (user: User) => {
+  localStorage.setItem(USER_KEY, JSON.stringify(user))
+}
+
+/**
+ * 获取存储的用户数据
+ */
+export const getStoredUser = (): User | null => {
+  const userData = localStorage.getItem(USER_KEY)
+  if (!userData) return null
+  try {
+    return JSON.parse(userData)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 清除存储的认证信息
+ */
+const clearAuth = () => {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
+  localStorage.removeItem(USER_KEY)
+  clearSessionCache()
+}
 
 /**
  * 用户注册
@@ -13,45 +72,51 @@ export const register = async (
   form: RegisterForm
 ): Promise<ApiResponse<User>> => {
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          username: form.username
-        }
-      }
+    const response = await fetch(`${API_BASE}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password
+      })
     })
 
-    if (error) {
+    const result = await response.json()
+
+    if (result.error) {
       return {
         data: null,
         error: {
-          message: error.message === 'User already registered'
-            ? '该邮箱已被注册，请直接登录'
-            : `注册失败: ${error.message}`,
-          code: error.code,
-          status: error.status
+          message: result.error.message || '注册失败'
         }
       }
     }
 
-    if (!data.user) {
+    if (result.user && result.session) {
+      // 存储认证信息
+      storeToken(result.session.access_token, result.session.refresh_token)
+      
+      const user: User = {
+        id: result.user.id,
+        email: result.user.email,
+        username: result.user.username || form.username || result.user.email.split('@')[0]
+      }
+      
+      storeUser(user)
+
       return {
-        data: null,
-        error: {
-          message: '注册失败，请重试'
-        }
+        data: user,
+        error: null
       }
     }
 
     return {
-      data: {
-        id: data.user.id,
-        email: data.user.email || '',
-        username: form.username
-      },
-      error: null
+      data: null,
+      error: {
+        message: '注册失败，未返回用户信息'
+      }
     }
   } catch (err) {
     return {
@@ -68,52 +133,51 @@ export const register = async (
  */
 export const login = async (form: LoginForm): Promise<ApiResponse<User>> => {
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: form.email,
-      password: form.password
+    const response = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password
+      })
     })
 
-    if (error) {
-      let message = '登录失败，请重试'
-      if (error.message.includes('Invalid login credentials')) {
-        message = '邮箱或密码错误'
-      } else if (error.message.includes('Email not confirmed')) {
-        message = '请先验证邮箱后再登录'
+    const result = await response.json()
+
+    if (result.error) {
+      return {
+        data: null,
+        error: {
+          message: result.error.message || '登录失败'
+        }
+      }
+    }
+
+    if (result.user && result.session) {
+      // 存储认证信息
+      storeToken(result.session.access_token, result.session.refresh_token)
+      
+      const user: User = {
+        id: result.user.id,
+        email: result.user.email,
+        username: result.user.username || result.user.email.split('@')[0]
       }
       
+      storeUser(user)
+
       return {
-        data: null,
-        error: {
-          message,
-          code: error.code,
-          status: error.status
-        }
+        data: user,
+        error: null
       }
     }
-
-    if (!data.user) {
-      return {
-        data: null,
-        error: {
-          message: '登录失败，请重试'
-        }
-      }
-    }
-
-    // 获取用户扩展信息
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('username')
-      .eq('id', data.user.id)
-      .single()
 
     return {
-      data: {
-        id: data.user.id,
-        email: data.user.email || '',
-        username: profile?.username || data.user.user_metadata?.username || ''
-      },
-      error: null
+      data: null,
+      error: {
+        message: '登录失败，未返回用户信息'
+      }
     }
   } catch (err) {
     return {
@@ -130,30 +194,36 @@ export const login = async (form: LoginForm): Promise<ApiResponse<User>> => {
  */
 export const logout = async (): Promise<ApiResponse<null>> => {
   try {
-    // 清除会话缓存
-    clearSessionCache()
+    const token = getStoredToken()
     
-    const { error } = await supabase.auth.signOut()
-
-    if (error) {
+    if (!token) {
+      clearAuth()
       return {
         data: null,
-        error: {
-          message: `退出失败: ${error.message}`
-        }
+        error: null
       }
     }
+
+    await fetch(`${API_BASE}/logout`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    // 无论后端返回什么，都清除本地认证信息
+    clearAuth()
 
     return {
       data: null,
       error: null
     }
-  } catch (err) {
+  } catch {
+    // 即使出错也清除本地信息
+    clearAuth()
     return {
       data: null,
-      error: {
-        message: err instanceof Error ? err.message : '网络错误，请稍后重试'
-      }
+      error: null
     }
   }
 }
@@ -164,73 +234,79 @@ export const logout = async (): Promise<ApiResponse<null>> => {
 let sessionCache: { data: User | null; timestamp: number } | null = null
 const SESSION_CACHE_TTL = 5000 // 缓存 5 秒
 
-export const getSession = async () => {
+export const getSession = async (): Promise<ApiResponse<User | null>> => {
   try {
     // 如果有缓存且未过期，直接返回
     const now = Date.now()
-    if (sessionCache && (now - sessionCache.timestamp) < SESSION_CACHE_TTL && sessionCache.data) {
-      console.log('📦 Using cached session:', sessionCache.data.email)
+    if (sessionCache && (now - sessionCache.timestamp) < SESSION_CACHE_TTL) {
+      console.log('📦 Using cached session')
       return {
         data: sessionCache.data,
         error: null
       }
     }
+
+    const token = getStoredToken()
     
-    console.log('🔍 Fetching session from Supabase...')
-    const { data, error } = await supabase.auth.getSession()
-    
-    if (error) {
-      console.error('❌ Session error:', error.message)
-      sessionCache = null
-      return {
-        data: null,
-        error: { message: error.message }
-      }
-    }
-    
-    if (!data.session) {
-      console.log('ℹ️ No active session found')
-      sessionCache = null
+    // 没有 token，返回 null
+    if (!token) {
+      console.log('ℹ️ No token found')
+      sessionCache = { data: null, timestamp: now }
       return {
         data: null,
         error: null
       }
     }
 
-    console.log('✅ Session found for user:', data.session.user.email)
-
-    // 获取用户扩展信息
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('username')
-      .eq('id', data.session.user.id)
-      .single()
-
-    if (profileError) {
-      console.warn('⚠️ Could not fetch user profile:', profileError.message)
+    // 先尝试从本地存储获取
+    const storedUser = getStoredUser()
+    if (storedUser) {
+      console.log('✅ Using stored user data')
+      sessionCache = { data: storedUser, timestamp: now }
+      return {
+        data: storedUser,
+        error: null
+      }
     }
 
-    const userData = {
-      id: data.session.user.id,
-      email: data.session.user.email || '',
-      username: profile?.username || data.session.user.user_metadata?.username || ''
-    }
-    
-    // 更新缓存
-    sessionCache = {
-      data: userData,
-      timestamp: now
+    // 从后端验证 token 并获取用户信息
+    console.log('🔍 Fetching user from backend...')
+    const response = await fetch(`${API_BASE}/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    const result = await response.json()
+
+    if (result.error || !result.user) {
+      console.error('❌ Session validation failed')
+      clearAuth()
+      sessionCache = { data: null, timestamp: now }
+      return {
+        data: null,
+        error: result.error || { message: '会话已过期' }
+      }
     }
 
-    console.log('💾 Session cached:', userData.email)
+    const user: User = {
+      id: result.user.id,
+      email: result.user.email,
+      username: result.user.username || result.user.email.split('@')[0]
+    }
 
+    storeUser(user)
+    sessionCache = { data: user, timestamp: now }
+
+    console.log('✅ Session validated')
     return {
-      data: userData,
+      data: user,
       error: null
     }
   } catch (err) {
     console.error('❌ Exception in getSession:', err)
-    sessionCache = null
+    clearAuth()
+    sessionCache = { data: null, timestamp: Date.now() }
     return {
       data: null,
       error: {

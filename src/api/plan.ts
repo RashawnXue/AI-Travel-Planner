@@ -1,41 +1,43 @@
 /**
  * 行程相关 API
+ * 现在通过后端 API 处理，不再直接调用 Supabase
  */
 
-import { supabase } from '@/utils/supabase'
 import type { TravelPlan, PlanListItem, AIResponse } from '@/types/plan'
 import type { ApiResponse } from '@/types/api'
+import { getStoredToken } from './auth'
+import { get, post, del } from '@/utils/request'
+
+const API_BASE = '/api/backend/plans'
 
 /**
  * 获取用户的行程列表
- * @param page 页码，从1开始
- * @param pageSize 每页数量
  */
-export async function getPlanList(
-  page = 1,
-  pageSize = 20
-): Promise<ApiResponse<PlanListItem[]>> {
+export async function getPlanList(): Promise<ApiResponse<PlanListItem[]>> {
   try {
-    const offset = (page - 1) * pageSize
+    const token = getStoredToken()
     
-    const { data, error } = await supabase
-      .from('travel_plans')
-      .select('id, title, destination, days, budget, start_date, created_at')
-      .order('created_at', { ascending: false })
-      .range(offset, offset + pageSize - 1)
-
-    if (error) {
+    if (!token) {
       return {
         data: null,
-        error: {
-          message: error.message,
-          code: error.code
-        }
+        error: { message: '请先登录' }
+      }
+    }
+
+    const result = await get<{ data: PlanListItem[]; error?: { message: string } }>(
+      API_BASE,
+      token
+    )
+
+    if (result.error) {
+      return {
+        data: null,
+        error: { message: result.error.message || '获取行程列表失败' }
       }
     }
 
     return {
-      data: data as PlanListItem[],
+      data: result.data,
       error: null
     }
   } catch (err: unknown) {
@@ -55,24 +57,29 @@ export async function getPlanList(
  */
 export async function getPlanDetail(planId: string): Promise<ApiResponse<TravelPlan>> {
   try {
-    const { data, error } = await supabase
-      .from('travel_plans')
-      .select('*')
-      .eq('id', planId)
-      .single()
-
-    if (error) {
+    const token = getStoredToken()
+    
+    if (!token) {
       return {
         data: null,
-        error: {
-          message: error.message,
-          code: error.code
-        }
+        error: { message: '请先登录' }
+      }
+    }
+
+    const result = await get<{ data: TravelPlan; error?: { message: string } }>(
+      `${API_BASE}/${planId}`,
+      token
+    )
+
+    if (result.error) {
+      return {
+        data: null,
+        error: { message: result.error.message || '获取行程详情失败' }
       }
     }
 
     return {
-      data: data as TravelPlan,
+      data: result.data,
       error: null
     }
   } catch (err: unknown) {
@@ -92,18 +99,24 @@ export async function getPlanDetail(planId: string): Promise<ApiResponse<TravelP
  */
 export async function deletePlan(planId: string): Promise<ApiResponse<null>> {
   try {
-    const { error } = await supabase
-      .from('travel_plans')
-      .delete()
-      .eq('id', planId)
-
-    if (error) {
+    const token = getStoredToken()
+    
+    if (!token) {
       return {
         data: null,
-        error: {
-          message: error.message,
-          code: error.code
-        }
+        error: { message: '请先登录' }
+      }
+    }
+
+    const result = await del<{ error?: { message: string } }>(
+      `${API_BASE}/${planId}`,
+      token
+    )
+
+    if (result.error) {
+      return {
+        data: null,
+        error: { message: result.error.message || '删除行程失败' }
       }
     }
 
@@ -139,6 +152,15 @@ export async function createPlanFromAI(
       }
     }
 
+    const token = getStoredToken()
+    
+    if (!token) {
+      return {
+        data: null,
+        error: { message: '请先登录' }
+      }
+    }
+
     // 如果没有出发日期，设置为当前日期后三天
     let startDate: string
     if (!ai.start_date || ai.start_date.trim() === '') {
@@ -151,7 +173,6 @@ export async function createPlanFromAI(
     }
 
     const payload = {
-      user_id: userId,
       title: ai.title?.trim() || '未命名行程',
       destination: ai.destination?.trim() || '未知目的地',
       days: ai.days || 1,
@@ -163,25 +184,31 @@ export async function createPlanFromAI(
       ai_response: ai
     }
 
-    console.log('Inserting travel plan with payload:', payload)
+    console.log('Creating travel plan with payload:', payload)
 
-    const { data, error } = await supabase
-      .from('travel_plans')
-      .insert(payload)
-      .select('id')
-      .single()
+    const result = await post<{ data: { id: string }; error?: { message: string } }>(
+      API_BASE,
+      payload,
+      token
+    )
 
-    if (error) {
+    if (result.error) {
       return {
         data: null,
-        error: { message: error.message, code: error.code }
+        error: { message: result.error.message || '创建行程失败' }
       }
     }
 
-    return { data: { id: data.id as string }, error: null }
+    return { 
+      data: { id: result.data.id }, 
+      error: null 
+    }
   } catch (err) {
     const error = err as Error
-    return { data: null, error: { message: error.message || '创建行程失败' } }
+    return { 
+      data: null, 
+      error: { message: error.message || '创建行程失败' } 
+    }
   }
 }
 

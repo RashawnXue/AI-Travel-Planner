@@ -21,6 +21,7 @@
         :loading="planStore.loading"
         @toggle="toggleSidebar"
         @select-plan="handleSelectPlan"
+        @plan-deleted="handlePlanDeleted"
       />
 
       <!-- 右侧内容区 -->
@@ -28,11 +29,11 @@
         class="content-area" 
         :class="{ 
           expanded: sidebarCollapsed,
-          'welcome-bg': !currentPlanId && planStore.planList.length === 0
+          'welcome-bg': !currentPlanId && (planStore.loading || planStore.planList.length === 0)
         }"
       >
-        <!-- 空状态 - 无行程数据 -->
-        <div v-if="!currentPlanId && planStore.planList.length === 0" class="welcome-content">
+        <!-- 欢迎页面 - 加载中或无行程数据时显示 -->
+        <div v-if="!currentPlanId && (planStore.loading || planStore.planList.length === 0)" class="welcome-content">
           <!-- 装饰性背景元素 -->
           <div class="floating-elements">
             <div class="float-item" style="top: 15%; left: 10%; animation-delay: 0s;">🏖️</div>
@@ -106,6 +107,22 @@ const handleSelectPlan = (planId: string) => {
   currentPlanId.value = planId
   // 更新URL，但不刷新页面
   router.push({ path: '/', query: { planId } })
+}
+
+// 处理行程删除后的逻辑
+const handlePlanDeleted = () => {
+  // 删除后，如果还有行程，跳转到第一个行程
+  if (planStore.planList.length > 0) {
+    const firstPlan = planStore.planList[0]
+    if (firstPlan) {
+      currentPlanId.value = firstPlan.id
+      router.replace({ path: '/', query: { planId: firstPlan.id } })
+    }
+  } else {
+    // 如果没有行程了，清空当前选中
+    currentPlanId.value = null
+    router.replace({ path: '/' })
+  }
 }
 
 // 监听路由变化，当从其他页面返回时重新加载行程列表

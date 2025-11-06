@@ -23,6 +23,14 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/dashscope/, ''),
         timeout: 300000, // 5 分钟超时（毫秒）
         proxyTimeout: 300000 // 代理超时时间
+      },
+      // 后端 API 代理（开发环境）
+      '/api/backend': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/backend/, ''),
+        timeout: 300000,
+        proxyTimeout: 300000
       }
     }
   }

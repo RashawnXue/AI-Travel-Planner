@@ -4,10 +4,23 @@
 
 ## 技术栈
 
-- **前端**: Vue 3 + TypeScript + Vite + Pinia + Vue Router + Ant Design Vue
-- **后端**: Supabase (数据库、认证、存储)
+### 前端
+- **框架**: Vue 3 + TypeScript + Vite + Pinia + Vue Router
+- **UI 组件库**: Ant Design Vue
+- **后端服务**: Supabase (数据库、认证、存储)
 - **地图服务**: 高德地图 API
-- **AI 能力**: 阿里云百炼 (语音识别、大模型对话)
+
+### 后端
+- **框架**: FastAPI (Python 3.10+)
+- **AI 能力**: 阿里云百炼 (大模型对话)
+- **语音识别**: 阿里云 Paraformer ASR
+- **对象存储**: 阿里云 OSS (音频文件存储)
+
+### 架构说明
+本项目采用前后端分离架构：
+- **前端**: 负责界面展示、用户交互、Supabase 数据操作
+- **后端**: 负责 AI 调用、语音识别、文件上传等敏感操作
+- **优势**: 敏感配置（OSS密钥、ASR密钥等）不暴露在浏览器中
 
 ## 项目结构
 
@@ -62,6 +75,8 @@ src/
 
 ## 环境配置
 
+### 前端配置
+
 1. 复制 `.env.example` 文件为 `.env`
 2. 配置以下环境变量：
 
@@ -70,22 +85,34 @@ src/
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# 阿里云百炼
-VITE_BAILIAN_API_KEY=your_bailian_api_key
-VITE_BAILIAN_ASR_ENDPOINT=your_asr_endpoint
-VITE_BAILIAN_LLM_ENDPOINT=your_llm_endpoint
-VITE_BAILIAN_MODEL_NAME=qwen-max
+# 阿里云百炼（仅需 App ID，API Key 在界面配置或后端处理）
+VITE_BAILIAN_APP_ID=your_bailian_app_id
 
-# 百炼 Paraformer 实时识别
-VITE_PF_API_KEY=your_dashscope_api_key_or_temp_token
-# 可选：覆盖默认端点
-# VITE_PF_ASR_WS=wss://dashscope.aliyuncs.com/api-ws/v1/paraformer
-# 可选：指定模型（默认 paraformer-realtime-v2）
-# VITE_PF_MODEL=paraformer-realtime-v2
+# 高德地图（仅需 Key，Secret 在后端处理）
+VITE_AMAP_KEY=your_amap_key
+```
+
+### 后端配置
+
+1. 进入后端目录：`cd AI-Travel-Planner-be`
+2. 复制 `.env.example` 文件为 `.env`
+3. 配置以下环境变量：
+
+```env
+# 阿里云百炼
+BAILIAN_APP_ID=your_bailian_app_id
+
+# 阿里云 OSS
+OSS_REGION=oss-cn-shanghai
+OSS_ACCESS_KEY_ID=your_oss_access_key_id
+OSS_ACCESS_KEY_SECRET=your_oss_access_key_secret
+OSS_BUCKET=your_bucket_name
 
 # 高德地图
-VITE_AMAP_KEY=your_amap_key
-VITE_AMAP_SECRET=your_amap_secret
+AMAP_SECRET=your_amap_secret
+
+# CORS 配置（允许的前端域名）
+CORS_ORIGINS=http://localhost:5173,http://localhost:80
 ```
 
 ## Supabase 数据库初始化
@@ -109,9 +136,38 @@ npm install
 
 ## 开发
 
+### 启动后端服务
+
 ```sh
+cd AI-Travel-Planner-be
+
+# 首次运行：创建虚拟环境并安装依赖
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 启动后端（开发模式，支持热重载）
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+或使用提供的启动脚本：
+```sh
+chmod +x start.sh
+./start.sh
+```
+
+### 启动前端服务
+
+```sh
+# 在项目根目录
 npm run dev
 ```
+
+前端将运行在 `http://localhost:5173`，后端运行在 `http://localhost:8000`
+
+### API 文档
+
+后端启动后，访问 `http://localhost:8000/docs` 查看自动生成的 API 文档（Swagger UI）
 
 ## 构建
 
@@ -182,22 +238,102 @@ npm run lint
 
 ## Docker 部署
 
+### 架构说明
+
+Docker 部署包含两个容器：
+- **前端容器**: Nginx + Vue 静态文件（端口 80）
+- **后端容器**: FastAPI 应用（端口 8000）
+
+前端容器通过 Nginx 反向代理 `/api/backend/` 到后端容器。
+
 ### 快速部署
 
+#### 1. 部署后端
+
 ```bash
-# 1. 配置环境变量
+cd AI-Travel-Planner-be
+
+# 配置环境变量
+cp .env.example .env
+vi .env  # 填入实际配置
+
+# 构建镜像
+docker build -t ai-travel-planner-backend:latest .
+
+# 运行容器
+docker run -d \
+  -p 8000:8000 \
+  --name ai-travel-planner-backend \
+  --env-file .env \
+  ai-travel-planner-backend:latest
+```
+
+#### 2. 部署前端
+
+```bash
+cd ..  # 返回项目根目录
+
+# 配置环境变量
 cp .env.docker.example .env.docker
 vi .env.docker  # 填入实际配置
 
-# 2. 构建并打包
+# 构建并打包
 chmod +x build.sh
 ./build.sh
 
-# 3. 运行容器
-docker run -d -p 80:80 --name ai-travel-planner ai-travel-planner:latest
+# 运行容器（连接到后端）
+docker run -d \
+  -p 80:80 \
+  --name ai-travel-planner \
+  --link ai-travel-planner-backend:backend \
+  ai-travel-planner:latest
+```
+
+### 使用 Docker Compose（推荐）
+
+创建 `docker-compose.yml`：
+
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build: ./AI-Travel-Planner-be
+    container_name: ai-travel-planner-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./AI-Travel-Planner-be/.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  frontend:
+    build: .
+    container_name: ai-travel-planner
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+```
+
+启动所有服务：
+```bash
+docker-compose up -d
 ```
 
 ### 手动部署
+
+#### 前端
 
 ```bash
 # 1. 本地构建
@@ -211,13 +347,54 @@ docker build -t ai-travel-planner:latest .
 docker run -d -p 80:80 --name ai-travel-planner ai-travel-planner:latest
 ```
 
+#### 后端
+
+```bash
+cd AI-Travel-Planner-be
+
+# 1. 构建镜像
+docker build -t ai-travel-planner-backend:latest .
+
+# 2. 运行容器
+docker run -d \
+  -p 8000:8000 \
+  --name ai-travel-planner-backend \
+  --env-file .env \
+  ai-travel-planner-backend:latest
+```
+
 ### 更新部署
 
 ```bash
+# 前端
 ./build.sh v1.0.1
 docker stop ai-travel-planner && docker rm ai-travel-planner
 docker run -d -p 80:80 --name ai-travel-planner ai-travel-planner:v1.0.1
+
+# 后端
+cd AI-Travel-Planner-be
+docker build -t ai-travel-planner-backend:v1.0.1 .
+docker stop ai-travel-planner-backend && docker rm ai-travel-planner-backend
+docker run -d -p 8000:8000 --name ai-travel-planner-backend \
+  --env-file .env ai-travel-planner-backend:v1.0.1
 ```
+
+### 环境变量说明
+
+#### 前端环境变量（`.env.docker`）
+- `VITE_SUPABASE_URL`: Supabase 项目 URL
+- `VITE_SUPABASE_ANON_KEY`: Supabase 匿名密钥
+- `VITE_BAILIAN_APP_ID`: 百炼应用 ID
+- `VITE_AMAP_KEY`: 高德地图 Key
+
+#### 后端环境变量（`AI-Travel-Planner-be/.env`）
+- `BAILIAN_APP_ID`: 百炼应用 ID
+- `OSS_REGION`: OSS 区域
+- `OSS_ACCESS_KEY_ID`: OSS 访问密钥 ID
+- `OSS_ACCESS_KEY_SECRET`: OSS 访问密钥
+- `OSS_BUCKET`: OSS 存储桶名称
+- `AMAP_SECRET`: 高德地图密钥
+- `CORS_ORIGINS`: 允许的前端域名（逗号分隔）
 
 ## 开发规范
 

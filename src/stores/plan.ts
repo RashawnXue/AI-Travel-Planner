@@ -13,7 +13,6 @@ export const usePlanStore = defineStore('plan', () => {
   const currentPlan = ref<TravelPlan | null>(null)
   const loading = ref(false)
   const currentPage = ref(1)
-  const pageSize = ref(20)
   const hasMore = ref(true)
 
   // 计算属性
@@ -23,7 +22,7 @@ export const usePlanStore = defineStore('plan', () => {
   const fetchPlanList = async (page = 1) => {
     loading.value = true
     try {
-      const { data, error } = await getPlanList(page, pageSize.value)
+      const { data, error } = await getPlanList()
       
       if (error) {
         console.error('获取行程列表失败:', error.message)
@@ -31,13 +30,9 @@ export const usePlanStore = defineStore('plan', () => {
       }
 
       if (data) {
-        if (page === 1) {
-          planList.value = data
-        } else {
-          planList.value.push(...data)
-        }
+        planList.value = data
         currentPage.value = page
-        hasMore.value = data.length === pageSize.value
+        hasMore.value = false // 目前后端返回所有数据，不支持分页
       }
       
       return true
