@@ -1,7 +1,14 @@
 <template>
   <div class="login-page">
+    <!-- 装饰背景元素 - 增加更多颜色 -->
+    <div class="decor-orb orb-1"></div>
+    <div class="decor-orb orb-2"></div>
+    <div class="decor-orb orb-3"></div>
+    <div class="decor-orb orb-4"></div>
+    <div class="decor-orb orb-5"></div>
+    
     <div class="login-container">
-      <div class="logo">✈️</div>
+      <div class="logo"><img class="logo-img" src="/icon.svg" alt="logo" /></div>
       <h1>登录 AI 旅行规划师</h1>
 
       <a-form
@@ -134,16 +141,91 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient-adventure);
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 装饰背景球 - 增加更多色彩 */
+.decor-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #1e88e5 0%, #26c6da 100%);
+  top: -100px;
+  right: -100px;
+  animation: float-orb 20s ease-in-out infinite;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #66bb6a 0%, #26a69a 100%);
+  bottom: -100px;
+  left: -100px;
+  animation: float-orb 25s ease-in-out infinite reverse;
+}
+
+.orb-3 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #ff7043 0%, #ec407a 100%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: float-orb 30s ease-in-out infinite;
+}
+
+.orb-4 {
+  width: 450px;
+  height: 450px;
+  background: linear-gradient(135deg, #ab47bc 0%, #7e57c2 100%);
+  top: 15%;
+  left: 15%;
+  animation: float-orb 28s ease-in-out infinite;
+}
+
+.orb-5 {
+  width: 320px;
+  height: 320px;
+  background: linear-gradient(135deg, #ffa726 0%, #ffca28 100%);
+  bottom: 25%;
+  right: 15%;
+  animation: float-orb 22s ease-in-out infinite reverse;
+}
+
+@keyframes float-orb {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(50px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 30px) scale(0.9);
+  }
 }
 
 .login-container {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
   width: 520px;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
   padding: 48px 60px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+  z-index: 1;
 }
 
 .logo {
@@ -155,9 +237,14 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
   color: white;
   box-shadow: 0 4px 20px rgba(30, 136, 229, 0.3);
+}
+
+.logo-img {
+  width: 60px;
+  height: 60px;
+  display: block;
 }
 
 h1 {

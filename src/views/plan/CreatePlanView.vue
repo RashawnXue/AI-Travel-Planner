@@ -368,19 +368,21 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { invokeBailianApp, extractBailianText, parsePlanJsonFromText } from '@/api/ai'
 import { createWavRecorder } from '@/utils/audio'
 import { recognizeAudioBlob } from '@/api/asr'
 import { createPlanFromAI } from '@/api/plan'
 import { supabase } from '@/utils/supabase'
+import { useUserStore } from '@/stores/user'
 import type { AIResponse } from '@/types/plan'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // Tab 切换
-const activeTab = ref<'voice' | 'text'>('text')
+const activeTab = ref<'voice' | 'text'>('voice')
 
 // 语音输入相关
 const isRecording = ref(false)
@@ -522,6 +524,20 @@ async function stopRecording() {
 }
 
 const toggleRecording = () => {
+  // 检查 API Key
+  if (!userStore.hasApiKey) {
+    Modal.confirm({
+      title: '需要配置 API 密钥',
+      content: '使用语音识别功能需要先配置百炼 API 密钥，是否现在前往配置？',
+      okText: '去配置',
+      cancelText: '取消',
+      onOk() {
+        message.info('请点击顶部导航栏右侧的 "配置API密钥" 按钮')
+      }
+    })
+    return
+  }
+  
   if (!isRecording.value) {
     startRecording()
   } else {
@@ -568,6 +584,21 @@ const togglePreference = (preference: string) => {
  */
 async function generatePlan() {
   if (!canGenerate.value) return
+  
+  // 检查 API Key
+  if (!userStore.hasApiKey) {
+    Modal.confirm({
+      title: '需要配置 API 密钥',
+      content: '使用 AI 生成行程需要先配置百炼 API 密钥，是否现在前往配置？',
+      okText: '去配置',
+      cancelText: '取消',
+      onOk() {
+        // 触发 header 中的 API key 配置弹窗
+        message.info('请点击顶部导航栏右侧的 "配置API密钥" 按钮')
+      }
+    })
+    return
+  }
 
   isGenerating.value = true
   const progressInterval = startProgress()
@@ -631,8 +662,17 @@ async function generatePlan() {
     await new Promise(resolve => setTimeout(resolve, 500)) // 显示完成状态
     
     message.success('行程生成并保存成功！')
+    
+    // 清理状态
+    clearInterval(progressInterval)
+    isGenerating.value = false
+    generateProgress.value = 0
+    
+    // 等待一下确保状态更新完成
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
     // 返回首页并展示新创建的行程
-    router.push({ path: '/', query: { planId: createRes.data.id } })
+    await router.push({ path: '/', query: { planId: createRes.data.id } })
   } catch (err) {
     const e = err as Error
     message.error(e.message || '生成行程失败')

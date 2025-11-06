@@ -53,5 +53,37 @@ waitForInitialSession
       }
     })
 
+    // 添加页面可见性监听：当页面从隐藏变为可见时，检查并刷新会话
+    document.addEventListener('visibilitychange', async () => {
+      if (!document.hidden && userStore.isLoggedIn) {
+        // 页面变为可见时，主动刷新会话
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error || !session) {
+          console.warn('会话已失效，需要重新登录')
+          userStore.clearUser()
+          router.push('/login')
+        } else {
+          // 如果会话即将过期（小于5分钟），主动刷新
+          const expiresAt = session.expires_at || 0
+          const now = Math.floor(Date.now() / 1000)
+          if (expiresAt - now < 300) {
+            console.log('会话即将过期，主动刷新...')
+            await supabase.auth.refreshSession()
+          }
+        }
+      }
+    })
+
+    // 定期检查会话状态（每5分钟）
+    setInterval(async () => {
+      if (userStore.isLoggedIn) {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error || !session) {
+          console.warn('会话检查失败，清除登录状态')
+          userStore.clearUser()
+        }
+      }
+    }, 5 * 60 * 1000)
+
     app.mount('#app')
   })

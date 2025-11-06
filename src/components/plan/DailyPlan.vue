@@ -25,6 +25,18 @@
           <div class="legend-dot end"></div>
           <span>住宿</span>
         </div>
+        <div class="legend-item overlap-hint">
+          <div class="legend-dot overlapped">
+            <span class="mini-badge">⚠</span>
+          </div>
+          <span>坐标重叠</span>
+          <div class="legend-tooltip">
+            <div class="tooltip-icon">ℹ️</div>
+            <div class="tooltip-content">
+              当多个地点位置相同时，系统会自动将标记点分散显示（约88米间隔），并用黄色边框和警告标记提示。
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -199,35 +211,46 @@ const renderDayRoute = async () => {
   const allPoints: Array<[number, number]> = []
   // 用于记录每个活动的实际显示位置（包含偏移）
   const activityPositions: Array<[number, number]> = []
+  
+  // 用于检测和处理重复坐标的Map
+  const positionMap = new Map<string, number>()
 
   // 1. 添加所有活动标记点
   for (let i = 0; i < validActivities.length; i++) {
     const activity = validActivities[i]!
-    let position: [number, number] = [activity.longitude!, activity.latitude!]
+    const originalPosition: [number, number] = [activity.longitude!, activity.latitude!]
     
-    // 检查是否有重复坐标，如果有则添加微小偏移
-    const duplicateIndex = validActivities.slice(0, i).findIndex(
-      prev => prev.longitude === activity.longitude && prev.latitude === activity.latitude
-    )
-    const hasDuplicate = duplicateIndex !== -1
+    // 生成位置的唯一键
+    const posKey = `${activity.longitude},${activity.latitude}`
     
-    if (hasDuplicate) {
-      // 添加微小偏移（约50米），避免标记完全重叠
+    // 检查是否有重复坐标
+    let position: [number, number] = originalPosition
+    const duplicateCount = positionMap.get(posKey) || 0
+    
+    if (duplicateCount > 0) {
+      // 使用圆形分布算法，将重复的标记点围绕原点呈圆形分布
+      const radius = 0.0008 // 约88米的半径
+      const angle = (duplicateCount * (360 / (duplicateCount + 1))) * (Math.PI / 180) // 转换为弧度
+      
       position = [
-        activity.longitude! + 0.0005 * (i % 3 - 1),
-        activity.latitude! + 0.0005 * Math.floor(i / 3)
+        originalPosition[0] + radius * Math.cos(angle),
+        originalPosition[1] + radius * Math.sin(angle)
       ]
     }
+    
+    // 更新该位置的重复计数
+    positionMap.set(posKey, duplicateCount + 1)
+    const hasDuplicate = duplicateCount > 0
     
     activityPositions.push(position)
     allPoints.push(position)
 
     // 创建活动标记内容（起点用绿色，其他用紫色数字）
-    // 如果有重复，添加特殊样式
+    // 如果有重复，添加特殊样式和警告标记
     const markerContent = `
-      <div class="custom-marker ${i === 0 ? 'start' : 'middle'} ${hasDuplicate ? 'overlapped' : ''}">
+      <div class="custom-marker ${i === 0 ? 'start' : 'middle'} ${hasDuplicate ? 'overlapped' : ''}" ${hasDuplicate ? 'title="⚠️ 坐标重叠：此地点与其他地点位置相同，已自动分散显示"' : ''}>
         <div class="marker-number">${i + 1}</div>
-        ${hasDuplicate ? '<div class="overlap-badge">!</div>' : ''}
+        ${hasDuplicate ? '<div class="overlap-badge" title="坐标重叠提示">⚠</div>' : ''}
       </div>
     `
 
@@ -310,16 +333,34 @@ const renderDayRoute = async () => {
 
   // 2. 添加住宿标记（红色，酒店图标）
   if (todayAccommodation?.longitude && todayAccommodation?.latitude) {
-    const hotelPosition: [number, number] = [
+    let hotelPosition: [number, number] = [
       todayAccommodation.longitude,
       todayAccommodation.latitude
     ]
+    
+    // 检查酒店位置是否与活动位置重合
+    const hotelPosKey = `${todayAccommodation.longitude},${todayAccommodation.latitude}`
+    const duplicateCount = positionMap.get(hotelPosKey) || 0
+    
+    if (duplicateCount > 0) {
+      // 如果与其他标记点重合，使用圆形分布算法偏移
+      const radius = 0.0008 // 约88米的半径
+      const angle = (duplicateCount * (360 / (duplicateCount + 1))) * (Math.PI / 180)
+      
+      hotelPosition = [
+        todayAccommodation.longitude + radius * Math.cos(angle),
+        todayAccommodation.latitude + radius * Math.sin(angle)
+      ]
+    }
+    
+    positionMap.set(hotelPosKey, duplicateCount + 1)
     allPoints.push(hotelPosition)
 
     // 创建住宿标记内容
     const hotelMarkerContent = `
-      <div class="custom-marker end">
+      <div class="custom-marker end ${duplicateCount > 0 ? 'overlapped' : ''}" ${duplicateCount > 0 ? 'title="⚠️ 坐标重叠：酒店位置与其他地点相同，已自动分散显示"' : ''}>
         <div class="marker-number">🏨</div>
+        ${duplicateCount > 0 ? '<div class="overlap-badge" title="坐标重叠提示">⚠</div>' : ''}
       </div>
     `
 
@@ -598,6 +639,98 @@ watch(currentDay, async () => {
   color: var(--color-accent);
 }
 
+/* 重叠标记图例样式 */
+.legend-dot.overlapped {
+  position: relative;
+  color: #ffc107;
+  animation: pulse-glow-mini 2s ease-in-out infinite;
+}
+
+.mini-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 8px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff4d4f 100%);
+  color: white;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid white;
+  line-height: 1;
+}
+
+@keyframes pulse-glow-mini {
+  0%, 100% {
+    box-shadow: 0 0 0 2px #ffc107;
+  }
+  50% {
+    box-shadow: 0 0 0 2px #ffc107, 0 0 8px rgba(255, 193, 7, 0.5);
+  }
+}
+
+/* 重叠提示项 */
+.legend-item.overlap-hint {
+  position: relative;
+  cursor: help;
+}
+
+.legend-tooltip {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  width: 280px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+}
+
+.legend-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  right: 20px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(0, 0, 0, 0.85);
+}
+
+.legend-item.overlap-hint:hover .legend-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltip-icon {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 14px;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+.legend-item.overlap-hint:hover .tooltip-icon {
+  opacity: 1;
+}
+
+.tooltip-content {
+  margin: 0;
+}
+
 .daily-plan-container {
   display: flex;
   gap: 24px;
@@ -848,12 +981,13 @@ watch(currentDay, async () => {
   transform: scale(1.2);
 }
 
-/* 重叠标记的特殊样式 */
+/* 重叠标记的特殊样式 - 使用更明显的黄色边框和脉冲效果 */
 .custom-marker.overlapped {
-  animation: pulse 2s infinite;
+  animation: pulse-glow 2s ease-in-out infinite;
   box-shadow: 
-    0 0 0 3px rgba(255, 193, 7, 0.3),
+    0 0 0 3px rgba(255, 193, 7, 0.4),
     0 0 0 6px rgba(255, 193, 7, 0.2),
+    0 0 10px rgba(255, 193, 7, 0.3),
     0 2px 8px rgba(0, 0, 0, 0.3);
   border: 2px solid #ffc107;
 }
@@ -861,45 +995,61 @@ watch(currentDay, async () => {
 .custom-marker.overlapped:hover {
   animation: none;
   transform: scale(1.3);
+  box-shadow: 
+    0 0 0 4px rgba(255, 193, 7, 0.5),
+    0 0 0 8px rgba(255, 193, 7, 0.3),
+    0 0 15px rgba(255, 193, 7, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-/* 重叠标记的警告徽章 */
+/* 重叠标记的警告徽章 - 更大更明显 */
 .overlap-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 16px;
-  height: 16px;
-  background: #ff4d4f;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff4d4f 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   color: white;
   font-weight: bold;
   border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  animation: bounce 1s infinite;
+  box-shadow: 0 2px 6px rgba(255, 77, 79, 0.5);
+  animation: bounce-alert 1.5s ease-in-out infinite;
+  z-index: 10;
 }
 
-/* 脉冲动画 */
-@keyframes pulse {
+/* 脉冲发光动画 */
+@keyframes pulse-glow {
   0%, 100% {
     transform: scale(1);
+    box-shadow: 
+      0 0 0 3px rgba(255, 193, 7, 0.4),
+      0 0 0 6px rgba(255, 193, 7, 0.2),
+      0 0 10px rgba(255, 193, 7, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.3);
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.08);
+    box-shadow: 
+      0 0 0 5px rgba(255, 193, 7, 0.5),
+      0 0 0 10px rgba(255, 193, 7, 0.3),
+      0 0 20px rgba(255, 193, 7, 0.4),
+      0 2px 8px rgba(0, 0, 0, 0.3);
   }
 }
 
-/* 弹跳动画 */
-@keyframes bounce {
+/* 弹跳警告动画 */
+@keyframes bounce-alert {
   0%, 100% {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
   50% {
-    transform: translateY(-3px);
+    transform: translateY(-3px) scale(1.1);
   }
 }
 

@@ -180,6 +180,45 @@ npm run lint
 - [ ] 行程分享
 - [ ] 实时导航（调用高德导航 API）
 
+## Docker 部署
+
+### 快速部署
+
+```bash
+# 1. 配置环境变量
+cp .env.docker.example .env.docker
+vi .env.docker  # 填入实际配置
+
+# 2. 构建并打包
+chmod +x build.sh
+./build.sh
+
+# 3. 运行容器
+docker run -d -p 80:80 --name ai-travel-planner ai-travel-planner:latest
+```
+
+### 手动部署
+
+```bash
+# 1. 本地构建
+cp .env.docker .env
+npm run build
+
+# 2. 构建镜像
+docker build -t ai-travel-planner:latest .
+
+# 3. 运行容器
+docker run -d -p 80:80 --name ai-travel-planner ai-travel-planner:latest
+```
+
+### 更新部署
+
+```bash
+./build.sh v1.0.1
+docker stop ai-travel-planner && docker rm ai-travel-planner
+docker run -d -p 80:80 --name ai-travel-planner ai-travel-planner:v1.0.1
+```
+
 ## 开发规范
 
 - 使用 Vue 3 组合式 API

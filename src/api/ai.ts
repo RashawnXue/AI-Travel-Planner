@@ -3,6 +3,7 @@
  */
 
 import type { ApiResponse } from '@/types/api'
+import { useUserStore } from '@/stores/user'
 
 export interface BailianCompletionInput {
   prompt: string
@@ -48,14 +49,16 @@ export async function invokeBailianApp(
   options: BailianCompletionOptions = {}
 ): Promise<ApiResponse<unknown>> {
   try {
+    const userStore = useUserStore()
     const appId = import.meta.env.VITE_BAILIAN_APP_ID as string | undefined
-    const apiKey = import.meta.env.VITE_BAILIAN_API_KEY as string | undefined
+    // 优先使用用户配置的 API Key，如果没有则使用环境变量
+    const apiKey = userStore.apiKey || import.meta.env.VITE_BAILIAN_API_KEY as string | undefined
 
     if (!appId || !apiKey) {
       return {
         data: null,
         error: {
-          message: '缺少百炼配置：VITE_BAILIAN_APP_ID 或 VITE_BAILIAN_API_KEY 未设置',
+          message: appId ? '请先在顶部导航栏配置 API 密钥' : '缺少百炼配置：VITE_BAILIAN_APP_ID 未设置',
         }
       }
     }
