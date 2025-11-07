@@ -258,12 +258,11 @@ const handleChangePassword = async () => {
 /* ==================== 基础布局 ==================== */
 .profile-view {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
   padding-top: 64px;
   position: relative;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden; /* 隐藏最大滚动条 */
 }
 
 /* 装饰背景球 - 增加更多色彩 */
@@ -339,6 +338,7 @@ const handleChangePassword = async () => {
   padding: 0 24px;
   position: relative;
   z-index: 1;
+  height: calc(100vh - 64px - 80px); /* 减去 padding-top 和 margin */
 }
 
 .page-card {
@@ -350,8 +350,8 @@ const handleChangePassword = async () => {
     0 2px 8px rgba(0, 0, 0, 0.04);
   padding: 48px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  /* 使卡片在视窗内可滚动 */
-  max-height: calc(100vh - 120px);
+  /* 小滚动条：保留卡片内部滚动 */
+  height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }

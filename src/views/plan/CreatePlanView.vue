@@ -660,13 +660,11 @@ async function generatePlan() {
 
 <style scoped>
 .create-plan-view {
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
   padding-top: 64px;
   position: relative;
-  overflow-x: hidden;
-  /* 仅隐藏外层页面滚动，保留卡片内滚动 */
-  overflow-y: hidden;
+  overflow: hidden; /* 隐藏最大滚动条 */
 }
 
 /* ==================== 装饰背景 ==================== */
@@ -747,6 +745,7 @@ async function generatePlan() {
   padding: 0 24px;
   position: relative;
   z-index: 1;
+  height: calc(100vh - 64px - 80px); /* 减去 padding-top 和 margin */
 }
 
 .page-card {
@@ -759,8 +758,8 @@ async function generatePlan() {
   padding: 48px;
   padding-bottom: 120px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  /* 使卡片在视窗内可滚动 */
-  max-height: calc(100vh - 120px);
+  /* 小滚动条：保留卡片内部滚动 */
+  height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
