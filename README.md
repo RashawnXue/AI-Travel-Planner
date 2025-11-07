@@ -73,6 +73,20 @@ src/
 └── main.ts                 # 入口文件
 ```
 
+## 快速开始
+
+### 重要提示 ⚠️
+
+在首次运行项目前，请务必完成以下步骤：
+
+1. **配置 Supabase 邮件验证**
+   - 参考 `docs/supabase-email-config.md` 完成Supabase Dashboard中的配置
+   - 这是注册功能正常工作的前提条件
+
+2. **执行数据库初始化脚本**
+   - 在 Supabase Dashboard > SQL Editor 中执行 `docs/supabase-init.sql`
+   - 或执行 `AI-Travel-Planner-be/supabase_fix_registration.sql` 修复注册问题
+
 ## 环境配置
 
 ### 前端配置

@@ -79,7 +79,8 @@ export const register = async (
       },
       body: JSON.stringify({
         email: form.email,
-        password: form.password
+        password: form.password,
+        username: form.username
       })
     })
 
@@ -94,16 +95,16 @@ export const register = async (
       }
     }
 
+    // 注册成功会返回用户信息和session
     if (result.user && result.session) {
-      // 存储认证信息
-      storeToken(result.session.access_token, result.session.refresh_token)
-      
       const user: User = {
         id: result.user.id,
         email: result.user.email,
-        username: result.user.username || form.username || result.user.email.split('@')[0]
+        username: result.user.username || form.username
       }
       
+      // 存储认证信息
+      storeToken(result.session.access_token, result.session.refresh_token)
       storeUser(user)
 
       return {
@@ -162,7 +163,7 @@ export const login = async (form: LoginForm): Promise<ApiResponse<User>> => {
       const user: User = {
         id: result.user.id,
         email: result.user.email,
-        username: result.user.username || result.user.email.split('@')[0]
+        username: result.user.username || ''
       }
       
       storeUser(user)
@@ -292,7 +293,7 @@ export const getSession = async (): Promise<ApiResponse<User | null>> => {
     const user: User = {
       id: result.user.id,
       email: result.user.email,
-      username: result.user.username || result.user.email.split('@')[0]
+      username: result.user.username || ''
     }
 
     storeUser(user)

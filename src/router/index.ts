@@ -18,6 +18,12 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
+      path: '/auth/confirm',
+      name: 'confirm',
+      component: () => import('@/views/auth/ConfirmView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
       path: '/',
       name: 'home',
       component: () => import('@/views/plan/PlanListView.vue'),
@@ -55,7 +61,7 @@ router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   
   // 白名单路由（无需登录）
-  const whiteList = ['/login', '/register']
+  const whiteList = ['/login', '/register', '/auth/confirm']
   const requiresAuth = to.meta.requiresAuth !== false
   
   console.log('🚦 Route guard:', to.path, 'requiresAuth:', requiresAuth, 'isLoggedIn:', userStore.isLoggedIn)

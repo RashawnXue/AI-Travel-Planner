@@ -87,7 +87,7 @@
           </div>
           
           <p class="section-desc">
-            为了您的账户安全，建议定期更换密码。密码长度至少为 6 个字符。
+            为了您的账户安全，建议定期更换密码。密码至少8个字符，必须包含大写字母、小写字母和数字。
           </p>
           
           <a-form
@@ -113,14 +113,11 @@
             <a-form-item
               label="新密码"
               name="newPassword"
-              :rules="[
-                { required: true, message: '请输入新密码' },
-                { min: 6, message: '密码至少 6 个字符' }
-              ]"
+              :rules="[{ validator: validateNewPasswordRule }]"
             >
               <a-input-password
                 v-model:value="passwordForm.newPassword"
-                placeholder="请输入新密码（至少6个字符）"
+                placeholder="至少8位，包含大小写字母和数字"
                 size="large"
                 :disabled="isChangingPassword"
               />
@@ -131,7 +128,7 @@
               name="confirmPassword"
               :rules="[
                 { required: true, message: '请确认新密码' },
-                { validator: validateConfirmPassword }
+                { validator: validateConfirmPasswordRule }
               ]"
             >
               <a-input-password
@@ -171,9 +168,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { message, Form as AForm, FormItem as AFormItem, InputPassword as AInputPassword, Button as AButton } from 'ant-design-vue'
+import type { Rule } from 'ant-design-vue/es/form'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { useUserStore } from '@/stores/user'
 import { usePlanStore } from '@/stores/plan'
+import { validatePassword } from '@/utils/validate'
 
 const userStore = useUserStore()
 const planStore = usePlanStore()
@@ -197,9 +196,21 @@ const passwordForm = ref({
 
 const isChangingPassword = ref(false)
 
+// 验证新密码
+const validateNewPasswordRule = async (_rule: Rule, value: string) => {
+  const result = validatePassword(value)
+  if (!result.valid) {
+    return Promise.reject(result.message)
+  }
+  return Promise.resolve()
+}
+
 // 验证确认密码
-const validateConfirmPassword = (_rule: unknown, value: string) => {
-  if (value && value !== passwordForm.value.newPassword) {
+const validateConfirmPasswordRule = async (_rule: Rule, value: string) => {
+  if (!value) {
+    return Promise.reject('请再次输入密码')
+  }
+  if (value !== passwordForm.value.newPassword) {
     return Promise.reject('两次输入的密码不一致')
   }
   return Promise.resolve()

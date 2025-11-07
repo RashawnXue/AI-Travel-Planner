@@ -107,7 +107,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { EyeTwoTone, EyeInvisibleOutlined } from '@ant-design/icons-vue'
-import { register, logout } from '@/api/auth'
+import { register } from '@/api/auth'
 import {
   validateUsername,
   validateEmail,
@@ -177,16 +177,13 @@ const handleSubmit = async () => {
       return
     }
 
-    // 注册成功后，Supabase 会自动创建会话，需要立即登出
-    // 这样用户才能正常跳转到登录页
-    await logout()
+    // 注册成功，直接跳转到登录页
+    message.success('注册成功！正在跳转到主页...', 2)
 
-    message.success('注册成功，请查收邮箱验证邮件后登录', 3)
-
-    // 3 秒后跳转到登录页
+    // 2 秒后跳转到登录页
     setTimeout(() => {
       router.push('/login')
-    }, 3000)
+    }, 2000)
   } catch (err) {
     message.error(err instanceof Error ? err.message : '注册失败，请重试', 3)
   } finally {
