@@ -1,6 +1,6 @@
 # 生产部署镜像（仅包含 Nginx + 静态文件）
 # 注意：需要先在本机执行 npm run build 生成 dist 目录
-FROM nginx:1.29.3-alpine
+FROM crpi-56emzhvxytc9g4y8.cn-hangzhou.personal.cr.aliyuncs.com/njuse/nginx:1.29.3-alpine
 
 # 设置时区为上海（手动设置，不安装额外包）
 ENV TZ=Asia/Shanghai
