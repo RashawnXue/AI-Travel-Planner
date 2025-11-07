@@ -148,6 +148,12 @@ onMounted(async () => {
     return
   }
 
+  // 只有在当前路由是首页时，才执行自动选择逻辑
+  // 避免在异步加载完成时，用户已经切换到其他页面的情况
+  if (route.path !== '/') {
+    return
+  }
+
   // 如果URL中有planId参数，自动选中
   const planIdFromQuery = route.query.planId as string
   if (planIdFromQuery) {
